@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: jpop-server
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_SETUP_KEY
+        generateValue: true
+      - key: SITE_DOMAIN
+        value: castrojosephzen.shop
+      - key: API_DOMAIN
+        value: api.castrojosephzen.shop
+      - key: CORS_ORIGINS
+        value: https://castrojosephzen.shop,https://www.castrojosephzen.shop,https://jpop-popcorn.vercel.app

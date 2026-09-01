@@ -1,0 +1,119 @@
+{
+  "products": [
+    {
+      "name": "Classic Golden Butter Popcorn",
+      "description": "Our signature movie-theater style popcorn, freshly popped and generously drenched in rich, artisanal creamy butter with fine sea salt.",
+      "price": "99.00",
+      "category": "classic",
+      "flavors": ["Original Butter", "Extra Creamy Butter", "Light Sea Salt"],
+      "isActive": true,
+      "sortOrder": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1572177215152-32f247303126?w=600&q=80"
+    },
+    {
+      "name": "Aged Sharp Cheddar Popcorn",
+      "description": "Savory, bold, and addictive gourmet popcorn dusted with premium Wisconsin sharp cheddar cheese powder.",
+      "price": "120.00",
+      "category": "savory",
+      "flavors": ["Sharp Cheddar", "Spicy Jalapeño Cheddar", "White Cheddar"],
+      "isActive": true,
+      "sortOrder": 2,
+      "imageUrl": "https://images.unsplash.com/photo-1585237432822-75d18d41ff1a?w=600&q=80"
+    },
+    {
+      "name": "Salted Caramel Gold Popcorn",
+      "description": "Sweet, crunchy monster mushroom kernels hand-coated in slow-simmered caramelized brown sugar and Himalayan pink salt.",
+      "price": "150.00",
+      "category": "sweet",
+      "flavors": ["Salted Caramel", "Classic Caramel", "Toffee Crunch"],
+      "isActive": true,
+      "sortOrder": 3,
+      "imageUrl": "https://images.unsplash.com/photo-1622619056151-512cdd9cb4d5?w=600&q=80"
+    },
+    {
+      "name": "Fiery Sriracha BBQ Popcorn",
+      "description": "Tantalizing smoky barbecue infused with genuine spicy Sriracha chili seasoning and a zesty twist of lime.",
+      "price": "135.00",
+      "category": "savory",
+      "flavors": ["Spicy Sriracha", "Sweet Chili BBQ", "Ghost Pepper Hot"],
+      "isActive": true,
+      "sortOrder": 4,
+      "imageUrl": "https://images.unsplash.com/photo-1563283626-d62153282ef7?w=600&q=80"
+    },
+    {
+      "name": "Cookies & Cream Dream Popcorn",
+      "description": "Crispy sweet popcorn drizzled with velvety white chocolate and coated with real crushed Oreo chocolate cookie crumbs.",
+      "price": "165.00",
+      "category": "sweet",
+      "flavors": ["Cookies & Cream", "Double Dark Cookie"],
+      "isActive": true,
+      "sortOrder": 5,
+      "imageUrl": "https://images.unsplash.com/photo-1596645398242-b0521e1a5f4a?w=600&q=80"
+    },
+    {
+      "name": "Kyoto Matcha White Chocolate Popcorn",
+      "description": "Authentic ceremonial grade Japanese Uji matcha tea delicately paired with premium Belgian white chocolate drizzle.",
+      "price": "180.00",
+      "category": "premium",
+      "flavors": ["Kyoto Matcha", "Matcha Vanilla Swirl"],
+      "isActive": true,
+      "sortOrder": 6,
+      "imageUrl": "https://images.unsplash.com/photo-1623910271501-8fa19488b394?w=600&q=80"
+    }
+  ],
+  "settings": {
+    "qr_codes": {
+      "gcash": {
+        "label": "GCash",
+        "accountName": "Joseph Zen Castro",
+        "accountNumber": "0912-345-6789",
+        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH:09123456789;NAME:Joseph+Zen+Castro;NOTE:JPOP-POPCORN"
+      },
+      "maya": {
+        "label": "Maya",
+        "accountName": "Joseph Zen Castro",
+        "accountNumber": "0912-345-6789",
+        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MAYA:09123456789;NAME:Joseph+Zen+Castro;NOTE:JPOP-POPCORN"
+      },
+      "instapay": {
+        "label": "InstaPay",
+        "accountName": "Joseph Zen Castro (BDO/BPI)",
+        "accountNumber": "1234-5678-9012",
+        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:123456789012;NAME:Joseph+Zen+Castro;NOTE:JPOP-POPCORN"
+      }
+    },
+    "faq": [
+      {
+        "question": "What flavors do you have?",
+        "answer": "We have 6 signature flavors: Classic Golden Butter, Aged Sharp Cheddar, Salted Caramel Gold, Fiery Sriracha BBQ, Cookies & Cream Dream, and Kyoto Matcha White Chocolate! Check our Shop page for details."
+      },
+      {
+        "question": "How do I order?",
+        "answer": "1. Browse our Shop and select your popcorn & flavor options.\n2. Add items to your cart and proceed to Checkout.\n3. Choose Delivery or Pickup and pick your preferred time.\n4. Scan the QR code (GCash, Maya, or InstaPay) and upload your payment receipt.\n5. We'll confirm your order and get it popping!"
+      },
+      {
+        "question": "What are your delivery fees & bulk discounts?",
+        "answer": "🍿 Bulk Order Promo:\n• 10 or more items: FREE Delivery!\n• 7 to 9 items: Only ₱5 shipping fee\n• 2 to 6 items: ₱40 shipping fee\n• 1 item: ₱50 shipping fee\n• Pickup at store: FREE!"
+      },
+      {
+        "question": "How do I pay?",
+        "answer": "We accept cashless QR code payments via GCash, Maya, and InstaPay (all bank transfers). Scan the QR code displayed during checkout, transfer the amount, and upload the screenshot receipt."
+      },
+      {
+        "question": "What are your operating hours?",
+        "answer": "We pop fresh Monday to Saturday, 9:00 AM to 8:00 PM. Orders placed after 8:00 PM are prepared early the next business day."
+      },
+      {
+        "question": "Can I pick up my order?",
+        "answer": "Yes! Choose 'Pickup' at checkout and select your scheduled pickup time. Your freshly popped bag will be waiting for you."
+      }
+    ],
+    "site_customization": {
+      "heroTitle": "Freshly Popped, Perfectly Flavored",
+      "heroSubtitle": "Crafted with passion using premium monster mushroom kernels and artisanal seasonings. Delivered fresh to your doorstep.",
+      "primaryColor": "#8B1A1A",
+      "accentColor": "#F5A623",
+      "bannerAnnouncement": "🎉 Bulk Promo: Order 10+ items for FREE DELIVERY!"
+    }
+  }
+}

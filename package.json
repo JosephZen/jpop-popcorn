@@ -1,0 +1,20 @@
+{
+  "name": "jpop-popcorn-platform",
+  "version": "3.0.0",
+  "description": "J-Pop Popcorn E-Commerce Platform - Full Stack Next.js & Node.js API",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"magenta,cyan\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "concurrently -n \"SERVER,CLIENT\" -c \"magenta,cyan\" \"npm run start --prefix server\" \"npm run start --prefix client\"",
+    "db:push": "npm run db:push --prefix server",
+    "db:seed": "npm run db:seed --prefix server",
+    "db:reset": "npm run db:reset --prefix server",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

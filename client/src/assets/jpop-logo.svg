@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B6B" />
+      <stop offset="50%" stop-color="#E84118" />
+      <stop offset="100%" stop-color="#9C1C1C" />
+    </linearGradient>
+    <linearGradient id="popcornGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3B0" />
+      <stop offset="50%" stop-color="#F9CA24" />
+      <stop offset="100%" stop-color="#E09F07" />
+    </linearGradient>
+    <linearGradient id="popcornButter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#FFF099" />
+      <stop offset="100%" stop-color="#F6B93B" />
+    </linearGradient>
+    <linearGradient id="popcornHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FFF099" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="bucketRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C23616" />
+      <stop offset="50%" stop-color="#EA2027" />
+      <stop offset="100%" stop-color="#B71540" />
+    </linearGradient>
+    <linearGradient id="bucketWhite" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F5F6FA" />
+      <stop offset="50%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#DFE4EA" />
+    </linearGradient>
+    <linearGradient id="badgeGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF275" />
+      <stop offset="50%" stop-color="#FFA801" />
+      <stop offset="100%" stop-color="#FF5E36" />
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+    <filter id="badgeShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#560000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <circle cx="250" cy="250" r="230" fill="url(#bgGrad)" filter="url(#softShadow)" />
+  <circle cx="250" cy="250" r="218" fill="none" stroke="#FFD32A" stroke-width="4" stroke-dasharray="10 6" opacity="0.6" />
+
+  <g fill="#FFF275" opacity="0.9">
+    <path d="M 120 120 Q 120 135 105 135 Q 120 135 120 150 Q 120 135 135 135 Q 120 135 120 120 Z" />
+    <path d="M 380 110 Q 380 125 365 125 Q 380 125 380 140 Q 380 125 395 125 Q 380 125 380 110 Z" />
+    <circle cx="160" cy="90" r="4" fill="#FFFFFF" />
+    <circle cx="340" cy="85" r="5" fill="#FFFFFF" />
+  </g>
+
+  <!-- Back Popcorn Clusters -->
+  <ellipse cx="180" cy="140" rx="35" ry="32" fill="url(#popcornGold)" />
+  <ellipse cx="320" cy="140" rx="35" ry="32" fill="url(#popcornGold)" />
+  <ellipse cx="250" cy="120" rx="42" ry="38" fill="url(#popcornGold)" />
+
+  <!-- Front Popcorn Kernels -->
+  <g>
+    <path d="M 160 170 C 145 150 165 125 190 135 C 205 120 230 135 225 155 C 240 165 235 190 215 195 C 195 205 165 195 160 170 Z" fill="url(#popcornButter)" stroke="#E09F07" stroke-width="2"/>
+    <path d="M 280 155 C 275 130 300 115 320 130 C 345 120 365 145 350 170 C 365 185 345 210 325 200 C 305 210 280 185 280 155 Z" fill="url(#popcornButter)" stroke="#E09F07" stroke-width="2"/>
+    <path d="M 220 130 C 205 105 235 85 255 100 C 275 80 305 105 290 130 C 310 145 295 175 275 170 C 255 180 230 165 225 145 Z" fill="url(#popcornButter)" stroke="#E09F07" stroke-width="2.5"/>
+    <path d="M 210 190 C 195 170 215 150 240 160 C 260 145 285 160 280 180 C 295 195 280 220 260 215 C 240 225 215 210 210 190 Z" fill="url(#popcornGold)" stroke="#B37700" stroke-width="2"/>
+  </g>
+
+  <!-- Bucket -->
+  <g filter="url(#softShadow)">
+    <path d="M 120 225 L 145 425 C 145 435 155 440 165 440 L 335 440 C 345 440 355 435 355 425 L 380 225 C 380 215 370 210 360 210 L 140 210 C 130 210 120 215 120 225 Z" fill="url(#bucketWhite)" />
+    <polygon points="150,210 180,210 195,440 170,440" fill="url(#bucketRed)" />
+    <polygon points="215,210 245,210 245,440 220,440" fill="url(#bucketRed)" />
+    <polygon points="280,210 310,210 295,440 270,440" fill="url(#bucketRed)" />
+    <polygon points="345,210 375,210 345,440 320,440" fill="url(#bucketRed)" />
+    <ellipse cx="250" cy="215" rx="132" ry="16" fill="url(#bucketWhite)" stroke="#E09F07" stroke-width="3"/>
+  </g>
+
+  <!-- J-POP Emblem Badge -->
+  <g filter="url(#badgeShadow)">
+    <rect x="140" y="285" width="220" height="75" rx="18" fill="#1E272E" stroke="#FFD32A" stroke-width="4"/>
+    <rect x="145" y="290" width="210" height="65" rx="14" fill="url(#badgeGold)" />
+    <rect x="148" y="293" width="204" height="59" rx="11" fill="#8B1A1A" />
+    <text x="250" y="338" font-family="'Impact', 'Arial Black', sans-serif" font-size="44" font-weight="900" text-anchor="middle" fill="#FFF275" stroke="#480808" stroke-width="2" letter-spacing="3">
+      J-POP
+    </text>
+    <rect x="175" y="354" width="150" height="22" rx="6" fill="#FFA801" stroke="#FFD32A" stroke-width="1.5"/>
+    <text x="250" y="369" font-family="'Trebuchet MS', 'Arial', sans-serif" font-size="12" font-weight="800" text-anchor="middle" fill="#2C3A47" letter-spacing="2">
+      GOURMET POPCORN
+    </text>
+  </g>
+</svg>
