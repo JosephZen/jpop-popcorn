@@ -14,7 +14,7 @@ export default function HomePage() {
   useEffect(() => {
     productsAPI.getAll()
       .then(({ data }) => {
-        setFeatured(data.products.slice(0, 4));
+        setFeatured(data.products.slice(0, 6));
       })
       .catch(() => {});
 
@@ -69,8 +69,8 @@ export default function HomePage() {
             <div className="feature-chip">
               <div className="feature-chip__icon"><FiTruck /></div>
               <div>
-                <strong>Fast Dispatch & Delivery</strong>
-                <span>Direct to your doorstep</span>
+                <strong>Order & Pickup</strong>
+                <span>Fresh pickup or free delivery to select areas</span>
               </div>
             </div>
             <div className="feature-chip">
@@ -121,29 +121,11 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Bulk Order Promo Banner */}
-      <section className="container promo-banner">
-        <div className="promo-banner__card">
-          <div className="promo-banner__content">
-            <h2>Order 10+ Bags for FREE DELIVERY! 🎉</h2>
-            <p>
-              Planning a movie night, family party, or office celebration? Enjoy our tiered bulk delivery promo:
-              10+ bags get free shipping, while 7–9 bags are just ₱5 shipping!
-            </p>
-            <div className="mt-lg">
-              <Link href="/shop" className="btn btn-accent btn-lg">
-                Order Bulk Popcorn <FiArrowRight />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="cta-section container">
         <h2 className="cta-section__title">Craving Crunchy Gourmet Popcorn?</h2>
         <p className="cta-section__text">
-          Pick your favorite butter, cheddar, salted caramel, or spicy flavors and checkout with quick QR code payment.
+          Pick your favorite butter, cheddar, salted caramel, or spicy flavors, order online for pickup, and checkout with quick QR code payment.
         </p>
         <Link href="/shop" className="btn btn-primary btn-lg">
           Browse Shop Now <FiArrowRight />

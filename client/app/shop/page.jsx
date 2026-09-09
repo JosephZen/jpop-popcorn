@@ -6,7 +6,7 @@ import { productsAPI } from '../../src/services/api';
 import ProductCard from '../../src/features/products/ProductCard';
 import '../../src/pages/ShopPage.css';
 
-const CATEGORIES = ['all', 'classic', 'savory', 'sweet', 'premium'];
+const CATEGORIES = ['all', 'classic', 'savory', 'sweet', 'premium', 'packaging'];
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);

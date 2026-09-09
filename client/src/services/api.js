@@ -2,6 +2,19 @@ import axios from 'axios';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+export const formatImageUrl = (url) => {
+  if (!url) return '/jpop-logo.svg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  let cleanPath = url.replace(/^public\//, '');
+  if (!cleanPath.startsWith('/')) {
+    cleanPath = `/${cleanPath}`;
+  }
+  const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
+  return `${apiOrigin}${cleanPath}`;
+};
+
 const api = axios.create({
   baseURL: API_BASE,
   headers: {

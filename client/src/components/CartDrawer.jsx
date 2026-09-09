@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FiX, FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiArrowRight } from 'react-icons/fi';
 import useCartStore from '../store/cartStore';
+import { formatImageUrl } from '../services/api';
 import './CartDrawer.css';
 
 const CartDrawer = ({ isOpen, onClose }) => {
@@ -11,10 +12,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const totalCount = getItemCount();
   const subtotal = getSubtotal();
-
-  const freeDeliveryThreshold = 10;
-  const itemsToFree = Math.max(0, freeDeliveryThreshold - totalCount);
-  const progressPercent = Math.min(100, (totalCount / freeDeliveryThreshold) * 100);
 
   const handleCheckout = () => {
     onClose();
@@ -38,22 +35,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Bulk Promo Progress */}
-        <div className="cart-drawer__bulk-promo">
-          <div className="cart-drawer__bulk-text">
-            {itemsToFree === 0 ? (
-              <span>🎉 You unlocked <strong>FREE DELIVERY!</strong></span>
-            ) : (
-              <span>
-                🍿 Add <strong>{itemsToFree} more bag{itemsToFree > 1 ? 's' : ''}</strong> for <strong>FREE DELIVERY!</strong>
-              </span>
-            )}
-          </div>
-          <div className="cart-drawer__bulk-bar">
-            <div className="cart-drawer__bulk-fill" style={{ width: `${progressPercent}%` }} />
-          </div>
-        </div>
-
         {/* Body */}
         <div className="cart-drawer__body">
           {items.length === 0 ? (
@@ -74,33 +55,34 @@ const CartDrawer = ({ isOpen, onClose }) => {
           ) : (
             <div className="cart-drawer__items">
               {items.map((item, idx) => (
-                <div key={`${item.productId}-${item.flavor}-${idx}`} className="cart-item">
+                <div key={`${item.productId}-${item.flavor}-${item.size}-${idx}`} className="cart-item">
                   <img
-                    src={item.imageUrl || '/jpop-logo.svg'}
+                    src={formatImageUrl(item.imageUrl)}
                     alt={item.name}
                     className="cart-item__img"
                   />
                   <div className="cart-item__info">
                     <div className="cart-item__name">{item.name}</div>
-                    {item.flavor && <span className="cart-item__flavor">{item.flavor}</span>}
+                    {item.flavor && <span className="cart-item__flavor">Flavor: {item.flavor}</span>}
+                    {item.size && <span className="cart-item__flavor" style={{marginLeft: '4px'}}>Size: {item.size}</span>}
                     <div className="cart-item__price">₱{item.price.toFixed(2)}</div>
                     <div className="cart-item__controls">
                       <button
                         className="cart-item__qty-btn"
-                        onClick={() => updateQuantity(item.productId, item.flavor, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.productId, item.flavor, item.size, item.quantity - 1)}
                       >
                         <FiMinus size={12} />
                       </button>
                       <span className="cart-item__qty">{item.quantity}</span>
                       <button
                         className="cart-item__qty-btn"
-                        onClick={() => updateQuantity(item.productId, item.flavor, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.productId, item.flavor, item.size, item.quantity + 1)}
                       >
                         <FiPlus size={12} />
                       </button>
                       <button
                         className="cart-item__remove"
-                        onClick={() => removeItem(item.productId, item.flavor)}
+                        onClick={() => removeItem(item.productId, item.flavor, item.size)}
                         title="Remove item"
                       >
                         <FiTrash2 size={16} />
@@ -122,11 +104,11 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <span>₱{subtotal.toFixed(2)}</span>
               </div>
               <div className="cart-drawer__row">
-                <span>Estimated Shipping</span>
-                <span>{totalCount >= 10 ? 'FREE' : 'Calculated at Checkout'}</span>
+                <span>Delivery</span>
+                <span>FREE (eligible areas)</span>
               </div>
               <div className="cart-drawer__row cart-drawer__row--total">
-                <span>Total Items</span>
+                <span>Total</span>
                 <span>₱{subtotal.toFixed(2)}</span>
               </div>
             </div>

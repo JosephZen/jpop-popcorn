@@ -4,18 +4,25 @@ import { useState } from 'react';
 import { FiPlus, FiCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import useCartStore from '../../store/cartStore';
+import { formatImageUrl } from '../../services/api';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
   const flavors = Array.isArray(product.flavors) ? product.flavors : [];
+  const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const [selectedFlavor, setSelectedFlavor] = useState(flavors[0] || '');
+  const [selectedSize, setSelectedSize] = useState(sizes[0] || '');
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = () => {
-    addItem(product, selectedFlavor || null, 1);
+    addItem(product, selectedFlavor || null, selectedSize || null, 1);
     setAdded(true);
-    toast.success(`Added ${product.name} ${selectedFlavor ? `(${selectedFlavor})` : ''} to cart! 🍿`);
+    let msg = `Added ${product.name}`;
+    if (selectedFlavor || selectedSize) {
+      msg += ` (${[selectedFlavor, selectedSize].filter(Boolean).join(', ')})`;
+    }
+    toast.success(`${msg} to cart! 🍿`);
     setTimeout(() => setAdded(false), 1200);
   };
 
@@ -23,7 +30,7 @@ const ProductCard = ({ product }) => {
     <div className="product-card">
       <div className="product-card__image-wrap">
         <img
-          src={product.imageUrl || '/jpop-logo.svg'}
+          src={formatImageUrl(product.imageUrl)}
           alt={product.name}
           className="product-card__image"
           loading="lazy"
@@ -46,6 +53,23 @@ const ProductCard = ({ product }) => {
               {flavors.map((f, i) => (
                 <option key={i} value={f}>
                   {f}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {sizes.length > 0 && (
+          <div className="product-card__flavors">
+            <label className="product-card__flavors-label">Select Size:</label>
+            <select
+              className="product-card__flavor-select"
+              value={selectedSize}
+              onChange={(e) => setSelectedSize(e.target.value)}
+            >
+              {sizes.map((s, i) => (
+                <option key={i} value={s}>
+                  {s}
                 </option>
               ))}
             </select>

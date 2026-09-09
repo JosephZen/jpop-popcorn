@@ -13,7 +13,7 @@ const STEPS = ['Delivery Method', 'Schedule Time', 'QR Payment & Receipt', 'Revi
 
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
-  const { items, getSubtotal, getShippingFee, getGrandTotal, clearCart } = useCartStore();
+  const { items, getSubtotal, getGrandTotal, clearCart } = useCartStore();
   const router = useRouter();
 
   const [step, setStep] = useState(0);
@@ -21,7 +21,8 @@ export default function CheckoutPage() {
   const [qrCodes, setQrCodes] = useState({});
 
   const [form, setForm] = useState({
-    deliveryMethod: 'delivery',
+    deliveryMethod: 'pickup',
+    deliveryArea: '',
     deliveryAddress: user?.address || '',
     deliveryNotes: '',
     scheduledTime: '',
@@ -68,13 +69,14 @@ export default function CheckoutPage() {
   };
 
   const subtotal = getSubtotal();
-  const shippingFee = getShippingFee(form.deliveryMethod);
-  const grandTotal = getGrandTotal(form.deliveryMethod);
+  const shippingFee = 0; // Free for pickup and eligible delivery areas
+  const grandTotal = subtotal + shippingFee;
 
   const canProceed = () => {
     if (step === 0) {
-      if (form.deliveryMethod === 'delivery' && !form.deliveryAddress.trim() && !form.deliveryNotes.trim()) {
-        return false;
+      if (form.deliveryMethod === 'delivery') {
+        if (!form.deliveryArea) return false;
+        if (!form.deliveryAddress.trim() && !form.deliveryNotes.trim()) return false;
       }
       return true;
     }
@@ -88,6 +90,10 @@ export default function CheckoutPage() {
   };
 
   const handleNext = () => {
+    if (step === 0 && form.deliveryMethod === 'delivery' && !form.deliveryArea) {
+      toast.error('Please select an eligible delivery area.');
+      return;
+    }
     if (step === 0 && form.deliveryMethod === 'delivery' && !form.deliveryAddress.trim() && !form.deliveryNotes.trim()) {
       toast.error('Please enter a delivery address or location notes.');
       return;
@@ -120,8 +126,10 @@ export default function CheckoutPage() {
           productId: i.productId,
           quantity: i.quantity,
           flavor: i.flavor,
+          size: i.size,
         })),
         deliveryMethod: form.deliveryMethod,
+        deliveryArea: form.deliveryMethod === 'delivery' ? form.deliveryArea : null,
         deliveryAddress: form.deliveryAddress,
         deliveryNotes: form.deliveryNotes,
         scheduledTime: form.scheduledTime || null,
@@ -176,21 +184,6 @@ export default function CheckoutPage() {
               <div>
                 <h3 style={{ marginBottom: '16px' }}>Choose Delivery or Pickup</h3>
                 <div className="checkout-methods">
-                  <label className={`checkout-method ${form.deliveryMethod === 'delivery' ? 'checkout-method--active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="delivery"
-                      value="delivery"
-                      checked={form.deliveryMethod === 'delivery'}
-                      onChange={() => updateForm('deliveryMethod', 'delivery')}
-                    />
-                    <FiTruck size={28} color="var(--color-primary)" />
-                    <strong>Doorstep Delivery</strong>
-                    <span className="text-muted" style={{ fontSize: '0.82rem' }}>
-                      Fast delivery to your home or office
-                    </span>
-                  </label>
-
                   <label className={`checkout-method ${form.deliveryMethod === 'pickup' ? 'checkout-method--active' : ''}`}>
                     <input
                       type="radio"
@@ -205,17 +198,49 @@ export default function CheckoutPage() {
                       Pick up hot & fresh at our counter (FREE)
                     </span>
                   </label>
+
+                  <label className={`checkout-method ${form.deliveryMethod === 'delivery' ? 'checkout-method--active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="delivery"
+                      value="delivery"
+                      checked={form.deliveryMethod === 'delivery'}
+                      onChange={() => updateForm('deliveryMethod', 'delivery')}
+                    />
+                    <FiTruck size={28} color="var(--color-primary)" />
+                    <strong>Free Delivery</strong>
+                    <span className="text-muted" style={{ fontSize: '0.82rem' }}>
+                      Available to select areas only
+                    </span>
+                  </label>
                 </div>
+                
+                <p className="text-muted" style={{ marginTop: '10px', fontSize: '0.9rem' }}>
+                  Free delivery is available to selected areas only. For other locations, please select Pickup.
+                </p>
 
                 {form.deliveryMethod === 'delivery' && (
-                  <div>
+                  <div style={{ marginTop: '20px' }}>
+                    <div className="form-group">
+                      <label className="form-label">Select Eligible Delivery Area</label>
+                      <select
+                        className="form-input"
+                        value={form.deliveryArea}
+                        onChange={(e) => updateForm('deliveryArea', e.target.value)}
+                      >
+                        <option value="" disabled>Select area...</option>
+                        <option value="Poblacion, San Juan, Abra">Poblacion, San Juan, Abra</option>
+                        <option value="Poblacion & Near, Lagangilang, Abra">Poblacion & Near, Lagangilang, Abra</option>
+                      </select>
+                    </div>
+
                     <div className="form-group">
                       <label className="form-label">
                         Delivery Address {user?.address ? '(Loaded from Profile)' : '(Required)'}
                       </label>
                       <textarea
                         className="form-textarea"
-                        placeholder="House / Unit No., Street, Barangay, City, Postal Code..."
+                        placeholder="House / Unit No., Street, Barangay..."
                         value={form.deliveryAddress}
                         onChange={(e) => updateForm('deliveryAddress', e.target.value)}
                       />
@@ -326,7 +351,7 @@ export default function CheckoutPage() {
                 <h3 style={{ marginBottom: '16px' }}>Review Your Order</h3>
 
                 <div style={{ marginBottom: '20px', padding: '14px', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
-                  <div><strong>Method:</strong> {form.deliveryMethod === 'pickup' ? 'Store Pickup' : 'Doorstep Delivery'}</div>
+                  <div><strong>Method:</strong> {form.deliveryMethod === 'pickup' ? 'Store Pickup' : `Free Delivery (${form.deliveryArea})`}</div>
                   {form.deliveryMethod === 'delivery' && (
                     <div><strong>Address:</strong> {form.deliveryAddress} {form.deliveryNotes ? `(${form.deliveryNotes})` : ''}</div>
                   )}
@@ -341,7 +366,7 @@ export default function CheckoutPage() {
                   {items.map((item, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.92rem' }}>
                       <span>
-                        {item.name} {item.flavor ? `(${item.flavor})` : ''} &times; {item.quantity}
+                        {item.name} {item.flavor ? `(${item.flavor})` : ''} {item.size ? `(${item.size})` : ''} &times; {item.quantity}
                       </span>
                       <strong>₱{(item.price * item.quantity).toFixed(2)}</strong>
                     </div>
@@ -355,7 +380,7 @@ export default function CheckoutPage() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span>Shipping Fee:</span>
-                    <span>{shippingFee === 0 ? 'FREE (Bulk Promo / Pickup)' : `₱${shippingFee.toFixed(2)}`}</span>
+                    <span>FREE</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-primary)' }}>
                     <span>Grand Total:</span>

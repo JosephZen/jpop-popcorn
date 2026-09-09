@@ -26,7 +26,7 @@ const loadFaq = async () => {
     },
     {
       question: 'What are your delivery fees & bulk discounts?',
-      answer: '🍿 Bulk Order Promo:\n• 10 or more items: FREE Delivery!\n• 7 to 9 items: Only ₱5 shipping fee\n• 2 to 6 items: ₱40 shipping fee\n• 1 item: ₱50 shipping fee\n• Pickup at store: FREE!'
+      answer: 'We are strictly Order & Pickup! 🏪\n\nFREE Delivery is available to selected areas only:\n• Poblacion, San Juan, Abra\n• Poblacion & Near, Lagangilang, Abra\n\nFor all other locations, please select Pickup at checkout.'
     },
     {
       question: 'How do I pay?',

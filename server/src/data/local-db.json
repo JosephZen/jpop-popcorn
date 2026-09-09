@@ -2,132 +2,244 @@
   "products": [
     {
       "id": 1,
-      "name": "Classic Golden Butter Popcorn",
-      "description": "Our signature movie-theater style popcorn, freshly popped and generously drenched in rich, artisanal creamy butter with fine sea salt.",
-      "price": "99.00",
-      "category": "classic",
+      "name": "On the GO Snack Ziplock",
+      "description": "Our Big-sized 20x30cm (1kg).",
+      "price": "60.00",
+      "category": "ziplock",
       "flavors": [
-        "Original Butter",
-        "Extra Creamy Butter",
-        "Light Sea Salt"
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
       ],
       "isActive": true,
       "sortOrder": 1,
-      "imageUrl": "https://images.unsplash.com/photo-1572177215152-32f247303126?w=600&q=80",
-      "createdAt": "2026-09-01T17:05:06.027Z",
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "imageUrl": "public/uploads/Ziplock(14).jpg",
+      "createdAt": "2026-09-07T16:47:49.065Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "id": 2,
-      "name": "Aged Sharp Cheddar Popcorn",
-      "description": "Savory, bold, and addictive gourmet popcorn dusted with premium Wisconsin sharp cheddar cheese powder.",
-      "price": "120.00",
-      "category": "savory",
+      "name": "On the GO Snack Ziplock Mini!",
+      "description": "Our Bite-sized 16x24cm (500g).",
+      "price": "35.00",
+      "category": "ziplock",
       "flavors": [
-        "Sharp Cheddar",
-        "Spicy Jalapeño Cheddar",
-        "White Cheddar"
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
       ],
       "isActive": true,
       "sortOrder": 2,
       "imageUrl": "https://images.unsplash.com/photo-1585237432822-75d18d41ff1a?w=600&q=80",
-      "createdAt": "2026-09-01T17:05:06.028Z",
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "id": 3,
-      "name": "Salted Caramel Gold Popcorn",
-      "description": "Sweet, crunchy monster mushroom kernels hand-coated in slow-simmered caramelized brown sugar and Himalayan pink salt.",
-      "price": "150.00",
-      "category": "sweet",
+      "name": "Absolute Cinema Bucket",
+      "description": "Enjoy watching movies with our cinema bucket popcorn.",
+      "price": "50.00",
+      "category": "Container",
       "flavors": [
-        "Salted Caramel",
-        "Classic Caramel",
-        "Toffee Crunch"
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
       ],
       "isActive": true,
       "sortOrder": 3,
-      "imageUrl": "https://images.unsplash.com/photo-1622619056151-512cdd9cb4d5?w=600&q=80",
-      "createdAt": "2026-09-01T17:05:06.028Z",
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "imageUrl": "public/uploads/Bucket(1).jpg",
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "id": 4,
-      "name": "Fiery Sriracha BBQ Popcorn",
-      "description": "Tantalizing smoky barbecue infused with genuine spicy Sriracha chili seasoning and a zesty twist of lime.",
-      "price": "135.00",
-      "category": "savory",
+      "name": "Classic Cinema",
+      "description": "Your classic cinema container.",
+      "price": "50.00",
+      "category": "Container",
       "flavors": [
-        "Spicy Sriracha",
-        "Sweet Chili BBQ",
-        "Ghost Pepper Hot"
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
       ],
       "isActive": true,
       "sortOrder": 4,
-      "imageUrl": "https://images.unsplash.com/photo-1563283626-d62153282ef7?w=600&q=80",
-      "createdAt": "2026-09-01T17:05:06.028Z",
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "imageUrl": "public/uploads/Box(16).jpg",
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "id": 5,
-      "name": "Cookies & Cream Dream Popcorn",
+      "name": "Wah",
       "description": "Crispy sweet popcorn drizzled with velvety white chocolate and coated with real crushed Oreo chocolate cookie crumbs.",
       "price": "165.00",
-      "category": "sweet",
+      "category": "Paperbag",
       "flavors": [
-        "Cookies & Cream",
-        "Double Dark Cookie"
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
       ],
       "isActive": true,
       "sortOrder": 5,
       "imageUrl": "https://images.unsplash.com/photo-1596645398242-b0521e1a5f4a?w=600&q=80",
-      "createdAt": "2026-09-01T17:05:06.028Z",
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "id": 6,
-      "name": "Kyoto Matcha White Chocolate Popcorn",
+      "name": "Wah wah",
       "description": "Authentic ceremonial grade Japanese Uji matcha tea delicately paired with premium Belgian white chocolate drizzle.",
       "price": "180.00",
-      "category": "premium",
+      "category": "Paperbag",
       "flavors": [
-        "Kyoto Matcha",
-        "Matcha Vanilla Swirl"
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
       ],
       "isActive": true,
       "sortOrder": 6,
       "imageUrl": "https://images.unsplash.com/photo-1623910271501-8fa19488b394?w=600&q=80",
-      "createdAt": "2026-09-01T17:05:06.028Z",
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
+    },
+    {
+      "id": 7,
+      "name": "Resealable Ziplock Bag (Large)",
+      "description": "Large resealable ziplock bag for packaging.",
+      "price": "60.00",
+      "category": "packaging",
+      "flavors": [],
+      "sizes": [
+        "Large Ziplock"
+      ],
+      "isActive": true,
+      "sortOrder": 7,
+      "imageUrl": "https://images.unsplash.com/photo-1572177215152-32f247303126?w=600&q=80",
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
+    },
+    {
+      "id": 8,
+      "name": "Resealable Ziplock Bag (Small)",
+      "description": "Small resealable ziplock bag for packaging.",
+      "price": "35.00",
+      "category": "packaging",
+      "flavors": [],
+      "sizes": [
+        "Small Ziplock"
+      ],
+      "isActive": true,
+      "sortOrder": 8,
+      "imageUrl": "https://images.unsplash.com/photo-1572177215152-32f247303126?w=600&q=80",
+      "createdAt": "2026-09-07T16:47:49.066Z",
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     }
   ],
   "admin_config": [
     {
       "id": 1,
-      "encryptedKey": "$2a$10$VltXDuF1Yl3NAeRtPq8nt.wwPICDXqSBAlqjC8pJfJaiH.3QPpWnG",
-      "usernameHash": "$2a$10$8iaJiwgxxWqYg4EaemYe0ujZQzXdbqqy5CWJUkh5uCx5m0YvyYCMa"
+      "encryptedKey": "$2a$10$4rZi8MiWEhF9b40ra/Ysw.nS/Um5s5i/JKfQa.jsStKApSnembKSK",
+      "usernameHash": "$2a$10$YWkf3hmlFco5ckn3JnuESuyYcFsN8s0PDnf1ex6RgHn2.r.gcE7s6"
     }
   ],
   "users": [
     {
       "id": 1,
       "email": "admin@jpop.local",
-      "passwordHash": "$2a$10$VltXDuF1Yl3NAeRtPq8nt.wwPICDXqSBAlqjC8pJfJaiH.3QPpWnG",
+      "passwordHash": "$2a$10$4rZi8MiWEhF9b40ra/Ysw.nS/Um5s5i/JKfQa.jsStKApSnembKSK",
       "name": "J-Pop Admin (Joseph Zen)",
       "phone": "0912-345-6789",
       "address": "Abra, Philippines",
       "role": "admin",
-      "createdAt": "2026-09-01T17:05:06.028Z"
+      "createdAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "id": 2,
       "email": "demo@jpop.test",
-      "passwordHash": "$2a$10$n1kcbA6LiMa/vUZcWNQmeOUNlByUQCG7tMZXNQ6l1UeQnO86rVvA2",
+      "passwordHash": "$2a$10$fBdJ/v2sTJMcv3HrLj7UAu9LyrYCtjHqGfKh5hZVtGGAANAu2FTeW",
       "name": "Demo Customer",
       "phone": "0912-345-6789",
       "address": "123 Sunshine Street, San Juan, Abra",
       "role": "customer",
-      "createdAt": "2026-09-01T17:05:06.028Z"
+      "createdAt": "2026-09-07T16:47:49.066Z"
     }
   ],
   "orders": [],
@@ -155,7 +267,7 @@
           "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:123456789012;NAME:Joseph+Zen+Castro;NOTE:JPOP-POPCORN"
         }
       },
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "key": "faq",
@@ -170,7 +282,7 @@
         },
         {
           "question": "What are your delivery fees & bulk discounts?",
-          "answer": "🍿 Bulk Order Promo:\n• 10 or more items: FREE Delivery!\n• 7 to 9 items: Only ₱5 shipping fee\n• 2 to 6 items: ₱40 shipping fee\n• 1 item: ₱50 shipping fee\n• Pickup at store: FREE!"
+          "answer": "We are strictly Order & Pickup! 🏪\n\nFREE Delivery is available to selected areas only:\n• Poblacion, San Juan, Abra\n• Poblacion & Near, Lagangilang, Abra\n\nFor all other locations, please select Pickup at checkout."
         },
         {
           "question": "How do I pay?",
@@ -185,20 +297,36 @@
           "answer": "Yes! Choose 'Pickup' at checkout and select your scheduled pickup time. Your freshly popped bag will be waiting for you."
         }
       ],
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     },
     {
       "key": "site_customization",
       "value": {
         "heroTitle": "Freshly Popped, Perfectly Flavored",
-        "heroSubtitle": "Crafted with passion using premium monster mushroom kernels and artisanal seasonings. Delivered fresh to your doorstep.",
+        "heroSubtitle": "Handcrafted gourmet popcorn in your favorite sizes. Available strictly for Order & Pickup, popped fresh daily!",
         "primaryColor": "#8B1A1A",
         "accentColor": "#F5A623",
-        "bannerAnnouncement": "🎉 Bulk Promo: Order 10+ items for FREE DELIVERY!"
+        "bannerAnnouncement": ""
       },
-      "updatedAt": "2026-09-01T17:05:06.028Z"
+      "updatedAt": "2026-09-07T16:47:49.066Z"
     }
   ],
-  "chat_sessions": [],
-  "chat_messages": []
+  "chat_sessions": [
+    {
+      "id": 1,
+      "createdAt": "2026-09-09T12:24:58.729Z",
+      "userId": null,
+      "customerName": "Guest Popcorn Lover",
+      "status": "bot"
+    }
+  ],
+  "chat_messages": [
+    {
+      "id": 1,
+      "createdAt": "2026-09-09T12:24:58.731Z",
+      "sessionId": 1,
+      "senderType": "bot",
+      "content": "Hi there! 🍿 Welcome to J-Pop Popcorn! I'm PopBot, your personal popcorn assistant. How can I help you today?"
+    }
+  ]
 }

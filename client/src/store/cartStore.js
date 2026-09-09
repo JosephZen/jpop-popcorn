@@ -23,10 +23,10 @@ const saveCart = (items) => {
 export const useCartStore = create((set, get) => ({
   items: loadCart(),
 
-  addItem: (product, flavor = null, quantity = 1) => {
+  addItem: (product, flavor = null, size = null, quantity = 1) => {
     set((state) => {
       const existingIndex = state.items.findIndex(
-        (i) => i.productId === product.id && i.flavor === (flavor || null)
+        (i) => i.productId === product.id && i.flavor === (flavor || null) && i.size === (size || null)
       );
 
       let newItems;
@@ -42,6 +42,7 @@ export const useCartStore = create((set, get) => ({
             price: parseFloat(product.price),
             imageUrl: product.imageUrl,
             flavor: flavor || null,
+            size: size || null,
             quantity,
           },
         ];
@@ -52,24 +53,24 @@ export const useCartStore = create((set, get) => ({
     });
   },
 
-  removeItem: (productId, flavor = null) => {
+  removeItem: (productId, flavor = null, size = null) => {
     set((state) => {
       const newItems = state.items.filter(
-        (i) => !(i.productId === productId && i.flavor === (flavor || null))
+        (i) => !(i.productId === productId && i.flavor === (flavor || null) && i.size === (size || null))
       );
       saveCart(newItems);
       return { items: newItems };
     });
   },
 
-  updateQuantity: (productId, flavor = null, quantity) => {
+  updateQuantity: (productId, flavor = null, size = null, quantity) => {
     if (quantity <= 0) {
-      get().removeItem(productId, flavor);
+      get().removeItem(productId, flavor, size);
       return;
     }
     set((state) => {
       const newItems = state.items.map((i) => {
-        if (i.productId === productId && i.flavor === (flavor || null)) {
+        if (i.productId === productId && i.flavor === (flavor || null) && i.size === (size || null)) {
           return { ...i, quantity };
         }
         return i;
@@ -93,13 +94,7 @@ export const useCartStore = create((set, get) => ({
   },
 
   getShippingFee: (deliveryMethod = 'delivery') => {
-    if (deliveryMethod === 'pickup') return 0;
-    const count = get().getItemCount();
-    if (count >= 10) return 0;
-    if (count >= 7) return 5;
-    if (count >= 2) return 40;
-    if (count >= 1) return 50;
-    return 0;
+    return 0; // Delivery is free to eligible areas
   },
 
   getGrandTotal: (deliveryMethod = 'delivery') => {

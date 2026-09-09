@@ -38,8 +38,8 @@ const Navbar = ({ onCartClick }) => {
         <Link href="/" className="navbar__brand">
           <img src="/jpop-logo.svg" alt="J-Pop Popcorn" className="navbar__logo" />
           <div>
-            <span className="navbar__brand-text">J-Pop</span>
-            <span className="navbar__brand-subtitle">Popcorn</span>
+            <span className="navbar__brand-text">J-Pop:</span>
+            <span className="navbar__brand-subtitle"> Kernel</span>
           </div>
         </Link>
 

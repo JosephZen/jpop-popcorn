@@ -35,6 +35,7 @@ export const products = pgTable('products', {
   imageUrl: text('image_url'),
   category: varchar('category', { length: 100 }).default('popcorn'),
   flavors: jsonb('flavors').default([]),
+  sizes: jsonb('sizes').default([]),
   isActive: boolean('is_active').default(true).notNull(),
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -65,6 +66,7 @@ export const orderItems = pgTable('order_items', {
   quantity: integer('quantity').notNull(),
   priceAtTime: decimal('price_at_time', { precision: 10, scale: 2 }).notNull(),
   flavor: varchar('flavor', { length: 100 }),
+  size: varchar('size', { length: 100 }),
 });
 
 // ─── Chat Sessions ───

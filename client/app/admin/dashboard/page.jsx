@@ -20,7 +20,7 @@ import {
   FiCheckCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../../src/features/auth/AuthContext';
-import { productsAPI, ordersAPI, settingsAPI, uploadAPI, authAPI } from '../../../src/services/api';
+import { productsAPI, ordersAPI, settingsAPI, uploadAPI, authAPI, formatImageUrl } from '../../../src/services/api';
 import toast from 'react-hot-toast';
 import AdminChatPanel from '../../../src/features/chat/AdminChatPanel';
 import '../../../src/pages/AdminDashboard.css';
@@ -374,7 +374,7 @@ export default function AdminDashboardPage() {
                   <tr key={p.id}>
                     <td>
                       <img
-                        src={p.imageUrl || '/jpop-logo.svg'}
+                        src={formatImageUrl(p.imageUrl)}
                         alt={p.name}
                         className="table-img"
                       />
@@ -767,7 +767,7 @@ export default function AdminDashboardPage() {
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
                   {productForm.imageUrl && (
                     <img
-                      src={productForm.imageUrl}
+                      src={formatImageUrl(productForm.imageUrl)}
                       alt="Preview"
                       style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' }}
                     />

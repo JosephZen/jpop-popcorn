@@ -58,29 +58,14 @@ router.post('/', authenticate, async (req, res) => {
         quantity: qty,
         priceAtTime: unitPrice.toFixed(2),
         flavor: item.flavor || null,
+        size: item.size || null,
       });
     }
 
     // Shipping calculation:
-    // Bulk Promo: 10+ items => FREE (₱0)
-    // 7-9 items => ₱5
-    // 2-6 items => ₱40
-    // 1 item => ₱50
-    // Pickup => ₱0
+    // Order & Pickup is default. Free delivery to eligible areas.
+    // The frontend will handle area eligibility validation.
     let shippingFee = 0;
-    const totalQuantity = resolvedItems.reduce((acc, item) => acc + item.quantity, 0);
-
-    if (deliveryMethod === 'delivery') {
-      if (totalQuantity >= 10) {
-        shippingFee = 0;
-      } else if (totalQuantity >= 7) {
-        shippingFee = 5;
-      } else if (totalQuantity >= 2) {
-        shippingFee = 40;
-      } else {
-        shippingFee = 50;
-      }
-    }
 
     const grandTotal = (calculatedSubtotal + shippingFee).toFixed(2);
 
@@ -103,6 +88,7 @@ router.post('/', authenticate, async (req, res) => {
           quantity: item.quantity,
           priceAtTime: item.priceAtTime,
           flavor: item.flavor,
+          size: item.size,
         });
       }
 
@@ -130,6 +116,7 @@ router.post('/', authenticate, async (req, res) => {
           quantity: item.quantity,
           priceAtTime: item.priceAtTime,
           flavor: item.flavor,
+          size: item.size,
         });
       });
 
@@ -159,6 +146,7 @@ router.get('/', authenticate, async (req, res) => {
             quantity: orderItems.quantity,
             priceAtTime: orderItems.priceAtTime,
             flavor: orderItems.flavor,
+            size: orderItems.size,
           }).from(orderItems)
             .leftJoin(products, eq(orderItems.productId, products.id))
             .where(eq(orderItems.orderId, order.id));
@@ -215,6 +203,7 @@ router.get('/admin/all', authenticate, requireAdmin, async (req, res) => {
             quantity: orderItems.quantity,
             priceAtTime: orderItems.priceAtTime,
             flavor: orderItems.flavor,
+            size: orderItems.size,
           }).from(orderItems)
             .leftJoin(products, eq(orderItems.productId, products.id))
             .where(eq(orderItems.orderId, order.id));

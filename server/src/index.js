@@ -49,6 +49,7 @@ app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // ─── Static files for local uploads fallback ───
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/public/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // ─── API Routes ───
 app.use('/api/auth', authRoutes);

@@ -1,0 +1,204 @@
+I want to create business website, it is a online e-commerce platform that sells my personal product, popcorn (add a svg of a popcorn with the name J-Pop as its name into the design), it has reply bot system that has query questions ready to answer customers question or concern, if not satisfied it should connect to a live agent (me) so that I could reply to them (if possible, can that live chat be connected to my fb messenger as an api) for the owner/admin side I should be able to add products edit the prices, options for the flavors, can change images via the frontend rather than editing on the code itself, have save changes or apply changes, admin should just have an encryption key login with a hidden username when logging in, now as for the customers, they should be able to login and create an account, after that they can browse thru the selections chat the bot for inquiry and have a checkout, in their profile, they can add (optional) their address to deliver their popcorn or pick up, if the account has no entered default address they should fill out the notes in the checkout to know where, when will be delivered, in the checkout as well it should have a when to pickup time or delivered as well, and for the payment method, I (owner) should display my qr codes to scan and send to pay for the checkout items add the confirm payment (add image to send image receipt) only accepts qr code base payment like gcash, maya,insta pay. in summary, add a svg logo, CRUD, admin & customer, custom designing on frontend, save / apply changes, database, ill be using vercel, neon, render, nextjs, postgre (local database setup, if this is unnecessary then ignore this)
+
+
+I have a hoststinger domain called castrojosephzen.shop, and i want to use this domain for this popcorn business, and would be changing the domain in the future, also lets include a database into the system, but also add a sample items on shop using json as a demo(deleting it later), a admin and user as well
+
+
+
+# Domain Configuration, Database Seeding & Admin/User System
+
+## Background
+
+The project is a full-stack popcorn e-commerce app (**J-Pop Popcorn**) with:
+- **Client**: nextjs React 18 + Vite, Zustand, TanStack Query
+- **Server**: Express.js, Drizzle ORM, Neon PostgreSQL
+- **Deployment**: Vercel (frontend) + Render (backend)
+
+The user wants to:
+1. Use domain `castrojosephzen.shop` (Hostinger) for this project, with easy domain changeability
+2. Add database integration (already partially in place with Drizzle + Neon)
+3. Add **sample/demo products via JSON** that seed the database (removable later)
+4. Ensure the **admin and user system** is complete and functional
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Hostinger Domain Setup**: The actual DNS configuration on Hostinger needs to be done manually by you. The plan below only prepares the codebase for domain-based deployment. You'll need to:
+> - Point `castrojosephzen.shop` → Vercel (for frontend) via A/CNAME records
+> - Set up a subdomain like `api.castrojosephzen.shop` → Render (for backend)
+>
+> I will document the exact DNS records you need to set.
+
+> [!IMPORTANT]
+> **Database**: You already have Drizzle + Neon configured. Do you have a Neon database URL ready, or do you need help setting one up? The seed script will need a working `DATABASE_URL` in `server/.env`.
+
+## Open Questions
+
+1. **Subdomain for API**: Should we use `api.castrojosephzen.shop` for the backend API, or a different subdomain?
+2. **Demo products**: I'll create ~6 sample popcorn products with realistic names, descriptions, prices (in ₱), and flavor options. Should I include images (via placeholder URLs) or leave them empty?
+3. **User management from admin**: Do you want the admin dashboard to have a user management section (view all users, disable accounts, etc.), or just keep the existing features (orders, products, settings)?
+
+## Proposed Changes
+
+### 1. Domain & Environment Configuration
+
+Summary: Centralize the domain in environment variables so changing it later is a single `.env` edit.
+
+---
+
+#### [MODIFY] [.env.example](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/server/.env.example)
+- Add `SITE_DOMAIN=castrojosephzen.shop`
+- Add `API_DOMAIN=api.castrojosephzen.shop`
+- Update `CORS_ORIGINS` to include the production domain
+
+#### [MODIFY] [config/index.js](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/server/src/config/index.js)
+- Add `siteDomain` and `apiDomain` to the config object
+- These are read from env vars, making domain changes a single `.env` edit
+
+#### [MODIFY] [.env](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/client/.env)
+- Add production API URL comment: `VITE_API_URL=https://api.castrojosephzen.shop/api`
+- Keep localhost as default for dev
+
+#### [NEW] [.env.production](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/client/.env.production)
+- Set `VITE_API_URL=https://api.castrojosephzen.shop/api`
+- Vite automatically uses `.env.production` during `build`
+
+#### [NEW] [dns-setup.md](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/dns-setup.md)
+- Step-by-step guide for configuring Hostinger DNS records
+- Instructions for pointing root domain to Vercel and API subdomain to Render
+
+---
+
+### 2. Database Seed Script (Demo Products)
+
+Summary: Create a seed script with ~6 sample popcorn products in JSON format. Runnable via `npm run db:seed`. Easy to delete later.
+
+---
+
+#### [NEW] [seed-data.json](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/server/src/data/seed-data.json)
+- 6 demo popcorn products with realistic data:
+  - Classic Butter Popcorn
+  - Cheddar Cheese Popcorn
+  - Caramel Drizzle Popcorn
+  - Spicy Sriracha Popcorn
+  - Cookies & Cream Popcorn
+  - Matcha White Chocolate Popcorn
+- Each with: name, description, price (₱), category, flavors array, sortOrder
+- Also includes a sample admin config and demo customer account for testing
+
+#### [NEW] [seed.js](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/server/src/data/seed.js)
+- Reads `seed-data.json`
+- Inserts products into the database via Drizzle
+- Creates a demo admin config (key: `admin123`, username: `admin`) for testing
+- Creates a demo customer account (email: `demo@jpop.test`, password: `demo1234`) for testing
+- Idempotent: skips if data already exists
+- Can be run via `npm run db:seed`
+
+#### [MODIFY] [package.json](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/server/package.json)
+- Add script: `"db:seed": "node src/data/seed.js"`
+- Add script: `"db:reset": "node src/data/seed.js --reset"` (drops & re-seeds)
+
+---
+
+### 3. Admin & User System Enhancements
+
+Summary: The existing auth system is solid. I'll add a few missing pieces to make it production-ready.
+
+---
+
+#### [MODIFY] [auth.js (routes)](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/server/src/routes/auth.js)
+- Add `GET /api/auth/users` (admin-only) — list all registered users
+- Add `PATCH /api/auth/users/:id/role` (admin-only) — change a user's role
+- Add `DELETE /api/auth/users/:id` (admin-only) — delete a user account
+
+#### [MODIFY] [api.js](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/client/src/services/api.js)
+- Add `authAPI.getUsers()` — admin endpoint to list users
+- Add `authAPI.updateUserRole(id, role)` — admin endpoint to change role
+- Add `authAPI.deleteUser(id)` — admin endpoint to delete user
+
+#### [MODIFY] [AdminDashboard.jsx](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/client/src/pages/AdminDashboard.jsx)
+- Add a "Users" tab in the admin dashboard
+- Show a table of all registered users (name, email, role, join date)
+- Allow role changes and user deletion from the UI
+
+#### [MODIFY] [AdminDashboard.css](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/client/src/pages/AdminDashboard.css)
+- Add styles for the users management table
+
+---
+
+### 4. Deployment Config Updates
+
+Summary: Update Vercel and Render configs for production deployment with custom domain.
+
+---
+
+#### [MODIFY] [vercel.json](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/vercel.json)
+- No code changes needed — domain is configured in the Vercel dashboard
+- But add headers for security (CORS, cache control)
+
+#### [MODIFY] [render.yaml](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/render.yaml)
+- Add `SITE_DOMAIN` and `API_DOMAIN` env vars
+- Update `CORS_ORIGINS` to include production domain
+
+#### [MODIFY] [index.html](file:///c:/Users/Joseph%20Zen/Downloads/School-Programming/Projects/popcorn/Popcorn_v2/client/index.html)
+- Add `<link rel="canonical" href="https://castrojosephzen.shop" />`
+- Update Open Graph / SEO meta tags with the production domain
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```bash
+# Push schema to database
+cd server && npm run db:push
+
+# Seed demo data
+cd server && npm run db:seed
+
+# Start backend and verify health
+cd server && npm run dev
+# GET http://localhost:5000/api/health → should return { status: 'ok' }
+
+# Start frontend
+cd client && npm run dev
+# Visit http://localhost:5173/shop → should show 6 demo products
+```
+
+### Manual Verification
+- Login as demo customer (`demo@jpop.test` / `demo1234`)
+- Login as admin (key: `admin123`, username: `admin`)
+- Verify admin can see Users tab and manage users
+- Verify products display correctly on the shop page
+- Verify cart and checkout flow works with demo products
+
+
+
+lets remove the promos, and instead focus more on the selections, add 3 sizes of paperbags for the popcorns, which; 90x55x175mm, 7.5x11.5x20cm, 8.5x13.5x26.5cm size. We also have 46oz Bucket Cup size and Rectangle size. we are strictly order and pick-up, order/ delivery is free on selected areas like Poblacion, San Juan, Abra & Poblacion & Near, Lagangilang, Abra. no bulk promo free shipping pricelist are: Resealable Ziplock bags : ₱60 & ₱35. and lastly, use my castrojosephzen.shop hostinger domain, but since i used a web builder to it it doesnt show this result.
+
+
+
+
+      "flavors": [
+        "Spicy Chili Barbeque",
+        "Classic Barbeque",
+        "Sour & Cream",
+        "Classic Cheese",
+        "Butter Cheese",
+        "Sweet Matcha",
+        "Caramel"
+      ],
+
+      "sizes": [
+        "Ziplock (20x30cm - 1kg)",
+        "Ziplock (16x24cm - 500g)",
+        "Paper Bag Small (90×55×175mm)",
+        "Paper Bag Medium (7.5×11.5×20cm)",
+        "Paper Bag Large (8.5×13.5×26.5cm)",
+        "46oz Bucket Cup",
+        "46oz Rectangle Container"
+      ],
+
+
+
+

@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS = {
     },
     {
       question: 'What are the delivery fees & bulk discounts?',
-      answer: '🍿 Bulk Order Promo:\n• 10 or more items: FREE Delivery!\n• 7 to 9 items: Only ₱5 shipping fee\n• 2 to 6 items: ₱40 shipping fee\n• 1 item: ₱50 shipping fee\n• Pickup at store: FREE!'
+      answer: 'We are strictly Order & Pickup! 🏪\n\nFREE Delivery is available to selected areas only:\n• Poblacion, San Juan, Abra\n• Poblacion & Near, Lagangilang, Abra\n\nFor all other locations, please select Pickup at checkout.'
     },
     {
       question: 'How do I pay?',
@@ -55,11 +55,15 @@ const DEFAULT_SETTINGS = {
   ],
   site_customization: {
     heroTitle: 'Freshly Popped, Perfectly Flavored',
-    heroSubtitle: 'Handcrafted gourmet popcorn popped fresh daily and delivered straight to your door.',
+    heroSubtitle: 'Handcrafted gourmet popcorn in your favorite sizes. Available strictly for Order & Pickup, popped fresh daily!',
     primaryColor: '#8B1A1A',
     accentColor: '#F5A623',
-    bannerAnnouncement: '🎉 Bulk Order Promo: Order 10+ items for FREE DELIVERY!'
-  }
+    bannerAnnouncement: ''
+  },
+  delivery_areas: [
+    'Poblacion, San Juan, Abra',
+    'Poblacion & Near, Lagangilang, Abra'
+  ]
 };
 
 // ─── Get Settings (Public) ───
