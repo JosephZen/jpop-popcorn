@@ -142,6 +142,12 @@
       "primaryColor": "#8B1A1A",
       "accentColor": "#F5A623",
       "bannerAnnouncement": ""
+    },
+    "facebook_messenger": {
+      "enabled": true,
+      "url": "https://m.me/josephzencastro",
+      "label": "Chat with Joseph on Messenger",
+      "username": "josephzencastro"
     }
   }
 }

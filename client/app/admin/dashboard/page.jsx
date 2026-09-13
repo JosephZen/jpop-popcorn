@@ -66,6 +66,11 @@ export default function AdminDashboardPage() {
       maya: { label: 'Maya', accountName: '', accountNumber: '', imageUrl: '' },
       instapay: { label: 'InstaPay', accountName: '', accountNumber: '', imageUrl: '' },
     },
+    facebook_messenger: {
+      enabled: true,
+      url: 'https://m.me/josephzencastro',
+      label: 'Chat with Joseph on Messenger',
+    },
     faq: [],
   });
 
@@ -102,6 +107,11 @@ export default function AdminDashboardPage() {
             gcash: { label: 'GCash', accountName: '', accountNumber: '', imageUrl: '' },
             maya: { label: 'Maya', accountName: '', accountNumber: '', imageUrl: '' },
             instapay: { label: 'InstaPay', accountName: '', accountNumber: '', imageUrl: '' },
+          },
+          facebook_messenger: s.facebook_messenger || {
+            enabled: true,
+            url: 'https://m.me/josephzencastro',
+            label: 'Chat with Joseph on Messenger',
           },
           faq: Array.isArray(s.faq) ? s.faq : [],
         });
@@ -618,6 +628,59 @@ export default function AdminDashboardPage() {
                     setSettingsForm({
                       ...settingsForm,
                       site_customization: { ...settingsForm.site_customization, heroSubtitle: e.target.value },
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Facebook Messenger Settings Card */}
+          <div className="card" style={{ marginBottom: '24px' }}>
+            <div className="card-body">
+              <h4 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                💬 Facebook Messenger Live Support
+              </h4>
+              <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '16px' }}>
+                Configure your Facebook Page or Personal Messenger link. Customers will be able to message you directly from PopBot!
+              </p>
+
+              <div className="form-group">
+                <label className="form-label">Messenger URL or Handle</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="https://m.me/josephzencastro"
+                  value={settingsForm.facebook_messenger?.url || ''}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      facebook_messenger: {
+                        ...settingsForm.facebook_messenger,
+                        url: e.target.value,
+                      },
+                    })
+                  }
+                />
+                <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>
+                  Format: <code>https://m.me/yourusername</code> (Current: <code>https://m.me/josephzencastro</code>)
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Messenger Button Text</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Chat with Joseph on Messenger"
+                  value={settingsForm.facebook_messenger?.label || ''}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      facebook_messenger: {
+                        ...settingsForm.facebook_messenger,
+                        label: e.target.value,
+                      },
                     })
                   }
                 />

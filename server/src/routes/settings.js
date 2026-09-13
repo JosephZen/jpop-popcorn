@@ -63,7 +63,13 @@ const DEFAULT_SETTINGS = {
   delivery_areas: [
     'Poblacion, San Juan, Abra',
     'Poblacion & Near, Lagangilang, Abra'
-  ]
+  ],
+  facebook_messenger: {
+    enabled: true,
+    url: 'https://m.me/josephzencastro',
+    label: 'Chat with Joseph on Messenger',
+    username: 'josephzencastro'
+  }
 };
 
 // ─── Get Settings (Public) ───

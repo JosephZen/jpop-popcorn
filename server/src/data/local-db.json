@@ -309,6 +309,16 @@
         "bannerAnnouncement": ""
       },
       "updatedAt": "2026-09-07T16:47:49.066Z"
+    },
+    {
+      "key": "facebook_messenger",
+      "value": {
+        "enabled": true,
+        "url": "https://m.me/josephzencastro",
+        "label": "Chat with Joseph on Messenger",
+        "username": "josephzencastro"
+      },
+      "updatedAt": "2026-09-13T14:47:49.066Z"
     }
   ],
   "chat_sessions": [
