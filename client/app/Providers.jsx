@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '../src/features/auth/AuthContext';
@@ -9,6 +9,7 @@ import Footer from '../src/components/Footer';
 import CartDrawer from '../src/components/CartDrawer';
 import ChatWidget from '../src/components/ChatWidget';
 import { usePathname } from 'next/navigation';
+import useCartStore from '../src/store/cartStore';
 
 export default function Providers({ children }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -19,6 +20,11 @@ export default function Providers({ children }) {
   const [cartOpen, setCartOpen] = useState(false);
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+
+  // Hydrate cart from localStorage on client side mount
+  useEffect(() => {
+    useCartStore.getState().initCart();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

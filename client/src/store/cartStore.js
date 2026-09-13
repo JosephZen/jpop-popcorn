@@ -2,16 +2,6 @@ import { create } from 'zustand';
 
 const STORAGE_KEY = 'jpop_cart';
 
-const loadCart = () => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
-  }
-};
-
 const saveCart = (items) => {
   if (typeof window !== 'undefined') {
     try {
@@ -21,7 +11,18 @@ const saveCart = (items) => {
 };
 
 export const useCartStore = create((set, get) => ({
-  items: loadCart(),
+  items: [],
+
+  initCart: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          set({ items: JSON.parse(saved) });
+        }
+      } catch {}
+    }
+  },
 
   addItem: (product, flavor = null, size = null, quantity = 1) => {
     set((state) => {
