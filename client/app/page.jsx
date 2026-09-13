@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { FiArrowRight, FiTruck, FiShield, FiClock, FiCreditCard } from 'react-icons/fi';
 import { productsAPI, settingsAPI } from '../src/services/api';
 import ProductCard from '../src/features/products/ProductCard';
+import { useAuth } from '../src/features/auth/AuthContext';
 import '../src/pages/HomePage.css';
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([]);
   const [customization, setCustomization] = useState({});
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     productsAPI.getAll()
@@ -43,9 +45,15 @@ export default function HomePage() {
                 'Crafted with premium monster mushroom kernels, pure artisanal butter, and decadent toppings. Order online for instant local delivery or store pickup!'}
             </p>
             <div className="hero__actions animate-fade-in-up">
-              <Link href="/shop" className="btn btn-primary btn-lg">
-                Explore Flavors <FiArrowRight />
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/shop" className="btn btn-primary btn-lg">
+                  Explore Flavors <FiArrowRight />
+                </Link>
+              ) : (
+                <Link href="/login" className="btn btn-primary btn-lg">
+                  Login / Create Account <FiArrowRight />
+                </Link>
+              )}
               <Link href="/shop" className="btn btn-outline btn-lg">
                 View Menu
               </Link>

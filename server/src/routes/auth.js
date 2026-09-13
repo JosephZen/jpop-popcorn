@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import passport from 'passport';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { eq, desc } from 'drizzle-orm';
@@ -388,3 +389,27 @@ router.delete('/users/:id', authenticate, requireAdmin, async (req, res) => {
 });
 
 export default router;
+
+// --- Google OAuth ---
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login?error=oauth_failed', session: false }),
+  (req, res) => {
+    const token = generateToken(req.user);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    res.redirect(`${clientUrl}/login?token=${token}`);
+  }
+);
+
+// --- Facebook OAuth ---
+router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+
+router.get('/facebook/callback',
+  passport.authenticate('facebook', { failureRedirect: '/login?error=oauth_failed', session: false }),
+  (req, res) => {
+    const token = generateToken(req.user);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    res.redirect(`${clientUrl}/login?token=${token}`);
+  }
+);

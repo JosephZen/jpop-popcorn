@@ -73,7 +73,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       >
                         <FiMinus size={12} />
                       </button>
-                      <span className="cart-item__qty">{item.quantity}</span>
+                      <span className="cart-item__qty" style={{ fontSize: '0.85rem' }}>Qty: {item.quantity}</span>
                       <button
                         className="cart-item__qty-btn"
                         onClick={() => updateQuantity(item.productId, item.flavor, item.size, item.quantity + 1)}

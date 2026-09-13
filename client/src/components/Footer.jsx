@@ -12,7 +12,7 @@ const Footer = () => {
           <div>
             <div className="footer__brand">
               <img src="/jpop-logo.svg" alt="J-Pop Logo" className="footer__logo" />
-              <span className="footer__brand-title">J-Pop Popcorn</span>
+              <span className="footer__brand-title">J-Pop: Kernel</span>
             </div>
             <p className="footer__tagline text-muted">
               Gourmet monster-mushroom popcorn crafted daily with genuine artisan seasonings. Pick up or get fast delivery straight to your door!
@@ -56,7 +56,7 @@ const Footer = () => {
         </div>
 
         <div className="footer__bottom">
-          <span>&copy; {new Date().getFullYear()} J-Pop Popcorn (castrojosephzen.shop). All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} J-Pop: Kernel (castrojosephzen.shop). All rights reserved.</span>
           <span>Popped with ❤️ by Joseph Zen</span>
         </div>
       </div>

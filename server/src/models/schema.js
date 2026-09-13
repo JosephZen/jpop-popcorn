@@ -11,11 +11,13 @@ export const senderTypeEnum = pgEnum('sender_type', ['customer', 'bot', 'admin']
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  passwordHash: varchar('password_hash', { length: 255 }), // Nullable for social logins
   name: varchar('name', { length: 255 }).notNull(),
   phone: varchar('phone', { length: 50 }),
   address: text('address'),
   role: userRoleEnum('role').default('customer').notNull(),
+  googleId: varchar('google_id', { length: 255 }).unique(),
+  facebookId: varchar('facebook_id', { length: 255 }).unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

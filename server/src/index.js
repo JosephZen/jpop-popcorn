@@ -6,6 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import session from 'express-session';
+import passport from './config/passport.js';
 import config from './config/index.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
@@ -20,6 +22,16 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
+
+// Add express-session middleware required by passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'jpop-super-secret-key-123!',
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ─── Socket.IO Setup ───
 const io = new Server(httpServer, {

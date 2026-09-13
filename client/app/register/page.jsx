@@ -43,6 +43,14 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/google';
+  };
+
+  const handleFacebookLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/facebook';
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -51,6 +59,20 @@ export default function RegisterPage() {
           <h2 className="auth-title">Create Account</h2>
           <p className="auth-subtitle">Join J-Pop Popcorn for quick order checkout</p>
         </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+          <button type="button" className="btn btn-outline btn-full" onClick={handleGoogleLogin}>
+            Sign up with Google
+          </button>
+          <button type="button" className="btn btn-primary btn-full" onClick={handleFacebookLogin} style={{ background: '#1877F2', borderColor: '#1877F2' }}>
+            Sign up with Facebook (Recommended)
+          </button>
+          <p style={{ fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            We ask for your name and email to sync your orders and chat history.
+          </p>
+        </div>
+
+        <div style={{ textAlign: 'center', margin: '15px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>OR</div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

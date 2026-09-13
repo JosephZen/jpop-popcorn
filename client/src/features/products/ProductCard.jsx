@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FiPlus, FiCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import useCartStore from '../../store/cartStore';
+import { useAuth } from '../auth/AuthContext';
 import { formatImageUrl } from '../../services/api';
 import './ProductCard.css';
 
@@ -14,8 +16,15 @@ const ProductCard = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState(sizes[0] || '');
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast('Please log in or create an account to add items to your cart.', { icon: 'dY"' });
+      return router.push('/login');
+    }
+    
     addItem(product, selectedFlavor || null, selectedSize || null, 1);
     setAdded(true);
     let msg = `Added ${product.name}`;

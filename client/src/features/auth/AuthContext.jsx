@@ -61,6 +61,14 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const loginWithToken = async (newToken) => {
+    localStorage.setItem('jpop_token', newToken);
+    setToken(newToken);
+    const { data } = await authAPI.getMe();
+    setUser(data.user);
+    return data;
+  };
+
   const register = async (formData) => {
     const { data } = await authAPI.register(formData);
     localStorage.setItem('jpop_token', data.token);
@@ -93,6 +101,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
         login,
+        loginWithToken,
         adminLogin,
         register,
         logout,
