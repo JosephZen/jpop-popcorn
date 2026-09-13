@@ -11,11 +11,16 @@ if (config.databaseUrl && config.databaseUrl.startsWith('postgres')) {
   try {
     const sql = neon(config.databaseUrl);
     db = drizzle(sql, { schema });
+    
+    // Verify connection to catch auth errors immediately
+    await sql`SELECT 1`;
+    
     isUsingNeon = true;
-    console.log('⚡ Connected to Neon PostgreSQL cloud database.');
+    console.log('✅ Connected to Neon PostgreSQL cloud database.');
   } catch (err) {
     console.warn('⚠️ Could not connect to Neon DB, falling back to Local JSON database:', err.message);
     isUsingNeon = false;
+    db = null;
   }
 } else {
   console.log('📁 Using local persistent database (server/src/data/local-db.json). Ready for local testing!');
