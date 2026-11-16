@@ -44,6 +44,6 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error('Register API error:', error);
-    return NextResponse.json({ error: 'Registration failed.', details: error?.message, stack: error?.stack }, { status: 500 });
+    return NextResponse.json({ error: 'Registration failed.' }, { status: 500 });
   }
 }
