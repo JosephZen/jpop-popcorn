@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import serverDb from '@/lib/server-db';
+
+export async function PATCH(request, { params }) {
+  try {
+    const user = serverDb.getUserFromRequest(request);
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const orderId = parseInt(id);
+
+    const updated = serverDb.update('orders', o => o.id === orderId, {
+      paymentConfirmed: true,
+      status: 'confirmed',
+    });
+
+    if (!updated) {
+      return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      order: updated,
+      message: 'Payment confirmed and order marked as confirmed.',
+    });
+  } catch (error) {
+    console.error('Confirm payment error:', error);
+    return NextResponse.json({ error: 'Failed to confirm payment.' }, { status: 500 });
+  }
+}
