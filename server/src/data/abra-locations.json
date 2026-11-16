@@ -1,0 +1,200 @@
+[
+  {
+    "name": "Bangued",
+    "deliveryFee": "40.00",
+    "barangays": [
+      "Agtangao", "Angad", "Bañacao", "Bangbangar", "Cabuloan", "Calaba", "Calot/Tablac",
+      "Cosili West", "Cosili East", "Dangdangla", "Lingtan", "Lipcan", "Lubong",
+      "Macarcarmay", "Macray", "Malita", "Maoay", "Marpe", "Zone 1 Pob.", "Zone 2 Pob.",
+      "Zone 3 Pob.", "Zone 4 Pob.", "Zone 5 Pob.", "Zone 6 Pob.", "Zone 7 Pob.",
+      "Sagap", "San Antonio", "Santa Rosa", "Sao-atan", "Sappaac", "Tablac"
+    ]
+  },
+  {
+    "name": "Boliney",
+    "deliveryFee": "120.00",
+    "barangays": ["Ba-i", "Boliney", "Danac East", "Danac West", "Dao-angan", "Dumagas", "Kilong-Olao", "Poblacion"]
+  },
+  {
+    "name": "Bucay",
+    "deliveryFee": "60.00",
+    "barangays": [
+      "Abang", "Bangbangcag", "Bangcagan", "Banglolao", "Bugbog", "Calao", "Culao",
+      "Dugong", "Labon", "Layugan", "Madalipay", "Pagala", "Palaquio", "Pakiling",
+      "Patoc", "North Poblacion", "South Poblacion", "Quimloong", "Salnec", "San Miguel", "Siblong"
+    ]
+  },
+  {
+    "name": "Bucloc",
+    "deliveryFee": "120.00",
+    "barangays": ["Ducligan", "Labaan", "Lingey", "Poblacion"]
+  },
+  {
+    "name": "Daguioman",
+    "deliveryFee": "130.00",
+    "barangays": ["Ableg", "Cabaruyan", "Pikek", "Tui"]
+  },
+  {
+    "name": "Danglas",
+    "deliveryFee": "70.00",
+    "barangays": ["Abaquid", "Cabaruan", "Caupasan", "Danglas", "Nagaparan", "Padangitan", "Panal"]
+  },
+  {
+    "name": "Dolores",
+    "deliveryFee": "50.00",
+    "barangays": [
+      "Balarac", "Bilarab", "Bugbog", "Cabaroan", "Cardona", "Isit", "Kimmalaba",
+      "Libtec", "Lub-lubba", "Mudiit", "Namit-ingan", "Pacac", "Poblacion", "Salucag", "Talogtog"
+    ]
+  },
+  {
+    "name": "La Paz",
+    "deliveryFee": "60.00",
+    "barangays": [
+      "Benben", "Bulbulala", "Busiing", "Canan", "Liguis", "Malabbaga",
+      "Mudeng", "Pidipid", "Poblacion", "San Gregorio", "Toon", "Udangan"
+    ]
+  },
+  {
+    "name": "Lacub",
+    "deliveryFee": "130.00",
+    "barangays": ["Bacag", "Buneg", "Guinguinabang", "Lan-ag", "Pacoc", "Poblacion"]
+  },
+  {
+    "name": "Lagangilang",
+    "deliveryFee": "30.00",
+    "barangays": [
+      "Aguet", "Bacooc", "Balais", "Cayapa", "Dalaguisen", "Jangao", "Karena",
+      "Laang", "Lagben", "Laguiben", "Nagtipulan", "Nagtupacan", "Pagudpud",
+      "Pawa", "Poblacion", "Presentar", "San Isidro"
+    ]
+  },
+  {
+    "name": "Lagayan",
+    "deliveryFee": "80.00",
+    "barangays": ["Ba-i", "Collago", "Pang-ot", "Poblacion", "Pulot"]
+  },
+  {
+    "name": "Langiden",
+    "deliveryFee": "70.00",
+    "barangays": ["Baac", "Dalayap", "Mabungtot", "Malapaao", "Poblacion", "Quillat"]
+  },
+  {
+    "name": "Licuan-Baay",
+    "deliveryFee": "120.00",
+    "barangays": [
+      "Bonglo", "Bulbulala", "Cawayan", "Domenglay", "Lenneng", "Mapisla",
+      "Mogao", "Nalbaba", "Poblacion", "Subusob", "Tumalip"
+    ]
+  },
+  {
+    "name": "Luba",
+    "deliveryFee": "100.00",
+    "barangays": ["Ampalioc", "Barit", "Gayaman", "Lul-luno", "Luzong", "Nagbukel-Tuquipa", "Poblacion", "Sabnangan"]
+  },
+  {
+    "name": "Malibcong",
+    "deliveryFee": "140.00",
+    "barangays": [
+      "Bayabas", "Binasaran", "Buanao", "Dulao", "Duldulao", "Gacab",
+      "Malibcong", "Mataragan", "Pacgued", "Taripan", "Umnap", "Lat-ey"
+    ]
+  },
+  {
+    "name": "Manabo",
+    "deliveryFee": "80.00",
+    "barangays": [
+      "Catacdegan Nuevo", "Catacdegan Viejo", "Luzong", "Ayyeng",
+      "San Jose Norte", "San Jose Sur", "San Juan Norte", "San Juan Sur",
+      "San Ramon East", "San Ramon West"
+    ]
+  },
+  {
+    "name": "Peñarrubia",
+    "deliveryFee": "50.00",
+    "barangays": [
+      "Dumayco", "Lusuac", "Malamsit", "Namarabar", "Patucannay",
+      "Poblacion", "Riang", "Santa Rosa", "Tattawa"
+    ]
+  },
+  {
+    "name": "Pidigan",
+    "deliveryFee": "50.00",
+    "barangays": [
+      "Alinaya", "Arab", "Garreta", "Immuli", "Laskig", "Monggoc",
+      "Naguirayan", "Pamutic", "Pangtod", "Poblacion East", "Poblacion West",
+      "San Diego", "Sulbec", "Yuyeng", "Suquib"
+    ]
+  },
+  {
+    "name": "Pilar",
+    "deliveryFee": "80.00",
+    "barangays": [
+      "Bolbolo", "Brookside", "Dalit", "Dintan", "Gapang", "Kinabiti",
+      "Maliplipit", "Nagcanasan", "Nanangduan", "Ocup", "Pang-ot", "Patad",
+      "Poblacion", "San Roquie", "Santa Fe", "Villavieja", "Wawa", "Dalimag", "South Balioag"
+    ]
+  },
+  {
+    "name": "Sallapadan",
+    "deliveryFee": "90.00",
+    "barangays": [
+      "Bazar", "Bilabila", "Gangal", "Maguyepyep", "Naguilian",
+      "Saccaang", "Sallapadan", "Subusob", "Ud-udiao"
+    ]
+  },
+  {
+    "name": "San Isidro",
+    "deliveryFee": "70.00",
+    "barangays": [
+      "Cabayogan", "Dalimag", "San Marcial", "San Rafeal", "Tangbao",
+      "Poblacion", "Pantoc", "Sabutan", "Ocup"
+    ]
+  },
+  {
+    "name": "San Juan",
+    "deliveryFee": "30.00",
+    "barangays": [
+      "Abualan", "Ba-nang", "Cabugao", "Canat", "Culiong", "Daoidao",
+      "Guimba", "Lam-ag", "Lumaba", "Nangobongan", "Patoc", "Poblacion North",
+      "Poblacion South", "Quidaoen", "Sabangan", "Silet", "Supi-il", "Tagodtod", "Colabaoan"
+    ]
+  },
+  {
+    "name": "San Quintin",
+    "deliveryFee": "70.00",
+    "barangays": ["Labaan", "Palang", "Pantoc", "Poblacion", "Tangadan", "Villa Mercedes"]
+  },
+  {
+    "name": "Tayum",
+    "deliveryFee": "40.00",
+    "barangays": [
+      "Bagalay", "Basbasa", "Budac", "Bumagcat", "Cabaroan", "Deet",
+      "Gaddani", "Patucannay", "Pias", "Poblacion", "Velasco"
+    ]
+  },
+  {
+    "name": "Tineg",
+    "deliveryFee": "150.00",
+    "barangays": [
+      "Agsimao", "Alaoa", "Anayan", "Apao", "Belaat", "Caganayan",
+      "Cogon", "Lanec", "Lapat-Balantay", "Poblacion"
+    ]
+  },
+  {
+    "name": "Tubo",
+    "deliveryFee": "150.00",
+    "barangays": [
+      "Alangtin", "Amtuagan", "Dilong", "Kili", "Poblacion/Mayabo",
+      "Supo", "Tiempo", "Tubtuba", "Wayangan", "Tabacda"
+    ]
+  },
+  {
+    "name": "Villaviciosa",
+    "deliveryFee": "80.00",
+    "barangays": [
+      "Ap-apaya", "Bol-lilising", "Calao", "Lap-lapog", "Lumaba",
+      "Poblacion", "Tamac", "Tuquib"
+    ]
+  }
+]

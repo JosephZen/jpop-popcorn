@@ -15,6 +15,10 @@ import orderRoutes from './routes/orders.js';
 import uploadRoutes from './routes/upload.js';
 import settingsRoutes from './routes/settings.js';
 import webhookRoutes from './routes/webhook.js';
+import categoryRoutes from './routes/categories.js';
+import customizationRoutes from './routes/customizations.js';
+import cartRoutes from './routes/cart.js';
+import locationRoutes from './routes/locations.js';
 import { setupChat } from './socket/chat.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -65,17 +69,22 @@ app.use('/public/uploads', express.static(path.join(__dirname, '../public/upload
 
 // ─── API Routes ───
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/customizations', customizationRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/locations', locationRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/webhook', webhookRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // ─── Health Check ───
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'J-Pop Popcorn API (v3)',
+    service: 'J-Pop Corner Snack Platform API (v3)',
     domain: config.siteDomain,
     timestamp: new Date().toISOString(),
   });
@@ -92,7 +101,7 @@ app.use((err, req, res, next) => {
 
 // ─── Start HTTP & WebSocket Server ───
 httpServer.listen(config.port, () => {
-  console.log(`🍿 J-Pop Popcorn Server v3 running on port ${config.port}`);
+  console.log(`🍿 J-Pop Corner Server v3 running on port ${config.port}`);
   console.log(`🌐 Target Domain: https://${config.siteDomain}`);
   console.log(`📡 API Domain: https://${config.apiDomain}`);
 });

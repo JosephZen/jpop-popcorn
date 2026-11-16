@@ -18,9 +18,10 @@ export const authenticate = (req, res, next) => {
   }
 };
 
-// Require admin role
+// Require admin role (case-insensitive for 'admin' or 'ADMIN')
 export const requireAdmin = (req, res, next) => {
-  if (req.user?.role !== 'admin') {
+  const role = (req.user?.role || '').toLowerCase();
+  if (role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required.' });
   }
   next();

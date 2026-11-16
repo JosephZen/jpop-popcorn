@@ -2,6 +2,9 @@ import { eq, desc } from 'drizzle-orm';
 import db, { isUsingNeon, localDb } from '../config/db.js';
 import { chatSessions, chatMessages, siteSettings } from '../models/schema.js';
 
+// In-memory cache for live customer carts per session
+const liveCarts = new Map();
+
 // Load FAQ from settings or fallback
 const loadFaq = async () => {
   try {
@@ -17,59 +20,58 @@ const loadFaq = async () => {
   }
   return [
     {
-      question: 'What flavors do you have?',
-      answer: 'We offer 6 signature flavors: Classic Golden Butter, Aged Sharp Cheddar, Salted Caramel Gold, Fiery Sriracha BBQ, Cookies & Cream Dream, and Kyoto Matcha White Chocolate! Check our Shop page for details.'
-    },
-    {
-      question: 'How do I order?',
-      answer: '1. Browse our Shop and select your popcorn & flavors.\n2. Add to cart & click Checkout.\n3. Choose Delivery or Pickup and pick your scheduled time.\n4. Scan our QR code (GCash/Maya/InstaPay) and upload your payment receipt!'
-    },
-    {
-      question: 'What are your delivery fees & bulk discounts?',
-      answer: 'We are strictly Order & Pickup! 🏪\n\nFREE Delivery is available to selected areas only:\n• Poblacion, San Juan, Abra\n• Poblacion & Near, Lagangilang, Abra\n\nFor all other locations, please select Pickup at checkout.'
-    },
-    {
-      question: 'How do I pay?',
-      answer: 'We accept cashless QR code payments via GCash, Maya, and InstaPay. Scan the QR code at checkout, complete payment, and upload your screenshot receipt.'
-    },
-    {
-      question: 'What are your operating hours?',
-      answer: 'We pop fresh Monday to Saturday, 9:00 AM to 8:00 PM.'
+      question: 'Chat Live Seller',
+      answer: 'Connecting you directly to our live Facebook Messenger inbox! Our multi-admin team is ready to assist you with inquiries, custom flavor orders, and bulk delivery.'
     },
     {
       question: 'Can I pick up my order?',
-      answer: 'Yes! Select "Pickup" at checkout and choose your scheduled pickup time.'
+      answer: 'Yes! You can choose "Store Pickup" at checkout with ₱0 shipping fee.\n📍 Pickup Location: J-Pop Corner, Poblacion, San Juan, Abra.\n⏱️ Prep Time: 15–30 minutes fresh from popping/frying. You will receive a ready-for-pickup notification!'
+    },
+    {
+      question: 'My Area is not listed on the shipping options.',
+      answer: 'If your exact barangay or municipality outside Abra isn\'t listed, simply choose "Store Pickup" or message our Live Seller on Facebook Messenger with your exact address. We partner with local courier and bus dispatch services for special delivery quotes!'
+    },
+    {
+      question: 'Operating Hours',
+      answer: '🕒 Store Hours: Monday to Saturday, 9:00 AM – 8:00 PM.\n⏰ Order Cut-off: 7:30 PM for same-day delivery or pickup. Orders placed after cut-off are queued for next morning popping!'
+    },
+    {
+      question: 'Payment methods',
+      answer: 'We support 3 flexible payment methods:\n1. 💵 Cash (Cash on Delivery or Cash on Pickup)\n2. 📱 Manual QR Ph / E-Wallet (GCash, Maya, InstaPay bank transfer with receipt upload)\n3. 💳 Automated Online Gateway (Credit/Debit cards, Maya & QR Ph via PayMongo / HitPay)'
     }
   ];
 };
 
-// Keyword matcher
+// Keyword & Quick-Reply matcher
 const findBotResponse = (message, faq) => {
   const lower = message.toLowerCase().trim();
+
+  // Exact or near matches for the 5 quick replies
+  if (lower.includes('chat live seller') || lower.includes('messenger') || lower.includes('chat with joseph') || lower.includes('facebook') || lower.includes('live agent') || lower.includes('human')) {
+    return faq.find(f => f.question.toLowerCase().includes('chat live seller'))?.answer ||
+      'Connecting you to our Live Seller on Facebook Messenger! You can chat directly with our team at https://m.me/josephzencastro';
+  }
+
+  if (lower.includes('pick up') || lower.includes('pickup') || lower.includes('can i pick up')) {
+    return faq.find(f => f.question.toLowerCase().includes('pick up'))?.answer;
+  }
+
+  if (lower.includes('not listed') || lower.includes('my area') || lower.includes('shipping options') || lower.includes('deliver to') || lower.includes('outside abra')) {
+    return faq.find(f => f.question.toLowerCase().includes('not listed'))?.answer;
+  }
+
+  if (lower.includes('operating hour') || lower.includes('hours') || lower.includes('open') || lower.includes('close') || lower.includes('cut-off') || lower.includes('time')) {
+    return faq.find(f => f.question.toLowerCase().includes('operating hours'))?.answer;
+  }
+
+  if (lower.includes('payment') || lower.includes('pay') || lower.includes('gcash') || lower.includes('maya') || lower.includes('qr') || lower.includes('card') || lower.includes('cash')) {
+    return faq.find(f => f.question.toLowerCase().includes('payment'))?.answer;
+  }
 
   for (const item of faq) {
     if (lower === item.question.toLowerCase() || lower.includes(item.question.toLowerCase())) {
       return item.answer;
     }
-  }
-
-  if (lower.includes('flavor') || lower.includes('taste') || lower.includes('menu') || lower.includes('kind') || lower.includes('variety')) {
-    return faq.find(f => f.question.toLowerCase().includes('flavor'))?.answer;
-  }
-  if (lower.includes('how to order') || lower.includes('buy') || lower.includes('purchase') || lower.includes('ordering')) {
-    return faq.find(f => f.question.toLowerCase().includes('order'))?.answer;
-  }
-  if (lower.includes('bulk') || lower.includes('shipping') || lower.includes('delivery') || lower.includes('fee') || lower.includes('cost') || lower.includes('promo') || lower.includes('discount')) {
-    return faq.find(f => f.question.toLowerCase().includes('delivery') || f.question.toLowerCase().includes('discount') || f.question.toLowerCase().includes('bulk'))?.answer;
-  }
-  if (lower.includes('pay') || lower.includes('gcash') || lower.includes('maya') || lower.includes('instapay') || lower.includes('payment') || lower.includes('qr')) {
-    return faq.find(f => f.question.toLowerCase().includes('pay'))?.answer;
-  }
-  if (lower.includes('hour') || lower.includes('open') || lower.includes('time') || lower.includes('schedule') || lower.includes('when')) {
-    return faq.find(f => f.question.toLowerCase().includes('hour'))?.answer;
-  }
-  if (lower.includes('pick') || lower.includes('pickup') || lower.includes('store')) {
-    return faq.find(f => f.question.toLowerCase().includes('pick'))?.answer;
   }
 
   return null;
@@ -79,10 +81,8 @@ export const setupChat = (io) => {
   const chatNamespace = io.of('/chat');
 
   chatNamespace.on('connection', (socket) => {
-    console.log(`🔌 Chat client connected: ${socket.id}`);
-
     // ─── Customer: Start or Resume Session ───
-    socket.on('start_session', async ({ userId, customerName }) => {
+    socket.on('start_session', async ({ userId, customerName, cart }) => {
       try {
         let session = null;
 
@@ -108,7 +108,7 @@ export const setupChat = (io) => {
               status: 'bot',
             }).returning();
 
-            const greeting = "Hi there! 🍿 Welcome to J-Pop Popcorn! I'm PopBot, your personal popcorn assistant. How can I help you today?";
+            const greeting = "Hi there! 🍿 Welcome to J-Pop Corner! I'm PopBot, your personal snack assistant. How can I help you today?";
             const [botMsg] = await db.insert(chatMessages).values({
               sessionId: session.id,
               senderType: 'bot',
@@ -134,7 +134,7 @@ export const setupChat = (io) => {
               status: 'bot',
             });
 
-            const greeting = "Hi there! 🍿 Welcome to J-Pop Popcorn! I'm PopBot, your personal popcorn assistant. How can I help you today?";
+            const greeting = "Hi there! 🍿 Welcome to J-Pop Corner! I'm PopBot, your personal snack assistant. How can I help you today?";
             const botMsg = localDb.insert('chat_messages', {
               sessionId: session.id,
               senderType: 'bot',
@@ -148,10 +148,29 @@ export const setupChat = (io) => {
         if (session) {
           socket.join(`session_${session.id}`);
           socket.sessionId = session.id;
+
+          if (cart) {
+            liveCarts.set(session.id, cart);
+            chatNamespace.to('admin_room').emit('customer_live_cart_update', {
+              sessionId: session.id,
+              cart,
+            });
+          }
         }
       } catch (err) {
         console.error('Start chat session error:', err);
         socket.emit('error', { message: 'Failed to start chat session.' });
+      }
+    });
+
+    // ─── Customer: Live Cart Sync ───
+    socket.on('sync_live_cart', ({ sessionId, cart }) => {
+      if (sessionId && cart) {
+        liveCarts.set(sessionId, cart);
+        chatNamespace.to('admin_room').emit('customer_live_cart_update', {
+          sessionId,
+          cart,
+        });
       }
     });
 
@@ -164,7 +183,7 @@ export const setupChat = (io) => {
           sessionId,
           senderType: 'customer',
           content: content.trim(),
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         };
 
         if (isUsingNeon && db) {
@@ -202,7 +221,7 @@ export const setupChat = (io) => {
               sessionId,
               senderType: 'bot',
               content: botResponse,
-              createdAt: new Date(),
+              createdAt: new Date().toISOString(),
             };
 
             if (isUsingNeon && db) {
@@ -221,13 +240,18 @@ export const setupChat = (io) => {
             }
 
             chatNamespace.to(`session_${sessionId}`).emit('new_message', botMsg);
+
+            // If user clicked Chat Live Seller, trigger live offer
+            if (content.toLowerCase().includes('live seller') || content.toLowerCase().includes('messenger')) {
+              chatNamespace.to(`session_${sessionId}`).emit('offer_live_agent');
+            }
           } else {
-            const offerMsg = "I'm not sure about that one! 🤔 Would you like to connect directly with our live owner/agent?";
+            const offerMsg = "I'm not completely certain about that! 🤔 Would you like to connect directly with our live team on Facebook Messenger or right here?";
             let botMsg = {
               sessionId,
               senderType: 'bot',
               content: offerMsg,
-              createdAt: new Date(),
+              createdAt: new Date().toISOString(),
             };
 
             if (isUsingNeon && db) {
@@ -270,7 +294,7 @@ export const setupChat = (io) => {
           const [botMsg] = await db.insert(chatMessages).values({
             sessionId,
             senderType: 'bot',
-            content: "You're now connected to our live agent queue! 🎧 Joseph (Owner) has been notified and will reply shortly.",
+            content: "You're now connected to our live agent queue! 🎧 Our store team has been notified and will reply shortly.",
           }).returning();
 
           chatNamespace.to(`session_${sessionId}`).emit('new_message', botMsg);
@@ -279,7 +303,7 @@ export const setupChat = (io) => {
           const botMsg = localDb.insert('chat_messages', {
             sessionId,
             senderType: 'bot',
-            content: "You're now connected to our live agent queue! 🎧 Joseph (Owner) has been notified and will reply shortly.",
+            content: "You're now connected to our live agent queue! 🎧 Our store team has been notified and will reply shortly.",
           });
           chatNamespace.to(`session_${sessionId}`).emit('new_message', botMsg);
         }
@@ -294,7 +318,6 @@ export const setupChat = (io) => {
     // ─── Admin: Join Admin Room ───
     socket.on('admin_join', async () => {
       socket.join('admin_room');
-      console.log('👑 Admin joined chat room');
 
       try {
         let activeSessions = [];
@@ -305,13 +328,20 @@ export const setupChat = (io) => {
         } else {
           activeSessions = localDb.find('chat_sessions', s => s.status === 'live');
         }
-        socket.emit('active_live_sessions', { sessions: activeSessions });
+
+        // Attach live cart if available
+        const enriched = activeSessions.map(s => ({
+          ...s,
+          cart: liveCarts.get(s.id) || null,
+        }));
+
+        socket.emit('active_live_sessions', { sessions: enriched });
       } catch (err) {
         console.error('Failed to load active sessions for admin:', err);
       }
     });
 
-    // ─── Admin: Join specific session ───
+    // ─── Admin: Join Specific Session ───
     socket.on('admin_join_session', async ({ sessionId }) => {
       socket.join(`session_${sessionId}`);
       try {
@@ -323,14 +353,31 @@ export const setupChat = (io) => {
         } else {
           messages = localDb.find('chat_messages', m => m.sessionId === sessionId);
         }
-        socket.emit('session_messages', { sessionId, messages });
+        const cart = liveCarts.get(sessionId) || null;
+        socket.emit('session_messages', { sessionId, messages, cart });
       } catch (err) {
         console.error('Admin join session error:', err);
       }
     });
 
+    // ─── Admin: Typing & Reply Indicator Broadcast ───
+    socket.on('admin_typing', ({ sessionId, adminName, isTyping }) => {
+      // Broadcast to other admins so they know someone is actively replying
+      socket.to('admin_room').emit('peer_admin_typing', {
+        sessionId,
+        adminName: adminName || 'Another Admin',
+        isTyping: !!isTyping,
+      });
+
+      // Also inform the customer in session
+      socket.to(`session_${sessionId}`).emit('agent_typing', {
+        isTyping: !!isTyping,
+        adminName: adminName || 'Store Team',
+      });
+    });
+
     // ─── Admin: Send Message ───
-    socket.on('admin_message', async ({ sessionId, content }) => {
+    socket.on('admin_message', async ({ sessionId, content, adminName }) => {
       try {
         if (!content || !content.trim()) return;
 
@@ -338,7 +385,8 @@ export const setupChat = (io) => {
           sessionId,
           senderType: 'admin',
           content: content.trim(),
-          createdAt: new Date(),
+          adminName: adminName || 'Admin',
+          createdAt: new Date().toISOString(),
         };
 
         if (isUsingNeon && db) {
@@ -347,16 +395,24 @@ export const setupChat = (io) => {
             senderType: 'admin',
             content: content.trim(),
           }).returning();
-          if (saved) adminMsg = saved;
+          if (saved) adminMsg = { ...saved, adminName };
         } else {
           adminMsg = localDb.insert('chat_messages', {
             sessionId,
             senderType: 'admin',
             content: content.trim(),
+            adminName,
           });
         }
 
         chatNamespace.to(`session_${sessionId}`).emit('new_message', adminMsg);
+
+        // Turn off typing indicator
+        socket.to('admin_room').emit('peer_admin_typing', {
+          sessionId,
+          adminName: adminName || 'Admin',
+          isTyping: false,
+        });
       } catch (err) {
         console.error('Admin message error:', err);
       }
@@ -373,7 +429,7 @@ export const setupChat = (io) => {
           const [botMsg] = await db.insert(chatMessages).values({
             sessionId,
             senderType: 'bot',
-            content: "This chat session has ended. Thank you for choosing J-Pop Popcorn! 🍿",
+            content: "This chat session has ended. Thank you for visiting J-Pop Corner! 🍿",
           }).returning();
 
           chatNamespace.to(`session_${sessionId}`).emit('new_message', botMsg);
@@ -382,11 +438,12 @@ export const setupChat = (io) => {
           const botMsg = localDb.insert('chat_messages', {
             sessionId,
             senderType: 'bot',
-            content: "This chat session has ended. Thank you for choosing J-Pop Popcorn! 🍿",
+            content: "This chat session has ended. Thank you for visiting J-Pop Corner! 🍿",
           });
           chatNamespace.to(`session_${sessionId}`).emit('new_message', botMsg);
         }
 
+        liveCarts.delete(sessionId);
         chatNamespace.to(`session_${sessionId}`).emit('session_status', { status: 'closed' });
         chatNamespace.to('admin_room').emit('session_closed', { sessionId });
       } catch (err) {
@@ -395,7 +452,7 @@ export const setupChat = (io) => {
     });
 
     socket.on('disconnect', () => {
-      console.log(`🔌 Chat client disconnected: ${socket.id}`);
+      // Clean up if needed
     });
   });
 };

@@ -2,22 +2,22 @@ import '../src/index.css';
 import Providers from './Providers';
 
 export const metadata = {
-  title: 'J-Pop: Kernel',
-  description: 'Artisanal gourmet popcorn popped fresh daily and delivered to your door. Order online with GCash, Maya, and InstaPay.',
-  keywords: 'J-Pop, gourmet popcorn, fresh popcorn, popcorn delivery, GCash, Maya, InstaPay, snacks, Philippines',
+  title: 'J-Pop Corner — Gourmet Snacks & Custom Treats',
+  description: 'Artisanal gourmet popcorn with custom mix sliders and freshly glazed mini donuts. Popped fresh daily in Abra with delivery & pickup across 27 municipalities.',
+  keywords: 'J-Pop Corner, gourmet popcorn, custom flavor mix, mini donuts, snacks, Abra Philippines, GCash, Maya, PayMongo, HitPay',
   metadataBase: new URL('https://castrojosephzen.shop'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'J-Pop: Kernel',
-    description: 'Freshly popped, perfectly flavored gourmet popcorn crafted with love and delivered to your door.',
+    title: 'J-Pop Corner — Gourmet Snacks & Custom Treats',
+    description: 'Freshly popped gourmet popcorn and glazed mini donuts crafted with passion. Free shipping promo on bulk orders!',
     url: 'https://castrojosephzen.shop',
-    siteName: 'J-Pop Popcorn',
+    siteName: 'J-Pop Corner',
     type: 'website',
   },
   icons: {
-    icon: '/favicon.svg',
+    icon: '/jpop-logo.svg',
   }
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/jpop-logo.svg" type="image/svg+xml" />
       </head>
       <body>
         <Providers>{children}</Providers>

@@ -4,25 +4,27 @@ import config from '../config/index.js';
 const router = Router();
 
 // ─── Facebook Messenger Webhook Verification (GET) ───
-router.get('/facebook', (req, res) => {
+// Supports /facebook and /messenger endpoints
+const handleVerification = (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
+  const expectedToken = config.facebook.verifyToken || process.env.FB_VERIFY_TOKEN || 'jpop_messenger_verify_token_2026';
 
   if (mode && token) {
-    if (mode === 'subscribe' && token === config.facebook.verifyToken) {
-      console.log('✅ Facebook Webhook verified successfully!');
-      res.status(200).send(challenge);
+    if (mode === 'subscribe' && (token === expectedToken || token === config.facebook.verifyToken)) {
+      console.log('✅ Facebook Messenger Webhook verified successfully!');
+      return res.status(200).send(challenge);
     } else {
-      res.sendStatus(403);
+      console.warn('⚠️ Facebook Webhook verification token mismatch.');
+      return res.sendStatus(403);
     }
-  } else {
-    res.sendStatus(400);
   }
-});
+  return res.sendStatus(400);
+};
 
-// ─── Facebook Messenger Webhook Incoming Events (POST) ───
-router.post('/facebook', (req, res) => {
+// ─── Facebook Messenger Incoming Events (POST) ───
+const handleIncomingEvent = (req, res) => {
   const body = req.body;
 
   if (body.object === 'page') {
@@ -30,14 +32,19 @@ router.post('/facebook', (req, res) => {
       const webhookEvent = entry.messaging?.[0];
       if (webhookEvent) {
         const senderPsid = webhookEvent.sender?.id;
-        console.log(`📩 Incoming Facebook message from sender PSID: ${senderPsid}`);
-        // Handle message event if FB_PAGE_ACCESS_TOKEN is configured
+        const message = webhookEvent.message;
+        console.log(`📩 Incoming Meta Messenger message from PSID: ${senderPsid}`, message?.text || '');
+        // When FB_PAGE_ACCESS_TOKEN is configured, Meta Business Suite shared inbox handles multi-admin replies.
       }
     });
-    res.status(200).send('EVENT_RECEIVED');
-  } else {
-    res.sendStatus(404);
+    return res.status(200).send('EVENT_RECEIVED');
   }
-});
+  return res.sendStatus(404);
+};
+
+router.get('/facebook', handleVerification);
+router.post('/facebook', handleIncomingEvent);
+router.get('/messenger', handleVerification);
+router.post('/messenger', handleIncomingEvent);
 
 export default router;

@@ -4,9 +4,13 @@ import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiArrowRight } from 'react-icons/fi';
+import { FaGoogle, FaFacebookF } from 'react-icons/fa';
 import { useAuth } from '../../src/features/auth/AuthContext';
+import JPopLogo from '../../src/components/JPopLogo';
 import toast from 'react-hot-toast';
 import '../../src/pages/AuthPages.css';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -21,7 +25,7 @@ function LoginForm() {
   useEffect(() => {
     if (token) {
       loginWithToken(token).then(() => {
-        toast.success('Successfully logged in with social account! dY?');
+        toast.success('Successfully logged in with social account! 🍿');
         router.push(redirectPath);
       }).catch(() => {
         toast.error('Failed to log in with social account.');
@@ -38,9 +42,13 @@ function LoginForm() {
 
     setLoading(true);
     try {
-      await login(email, password);
-      toast.success('Welcome back to J-Pop! dY?');
-      router.push(redirectPath);
+      const res = await login(email, password);
+      toast.success('Welcome back to J-Pop Corner! 🍿');
+      if ((res?.user?.role || '').toLowerCase() === 'admin' && redirectPath === '/') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push(redirectPath);
+      }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Invalid email or password.');
     } finally {
@@ -49,34 +57,45 @@ function LoginForm() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google';
+    window.location.href = `${API_BASE}/auth/google`;
   };
 
   const handleFacebookLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/facebook';
+    window.location.href = `${API_BASE}/auth/facebook`;
   };
 
   return (
     <div className="auth-card">
       <div className="auth-header">
-        <img src="/jpop-logo.svg" alt="J-Pop Logo" className="auth-logo" />
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to order your favorite gourmet popcorn</p>
+        <div style={{ marginBottom: '12px' }}>
+          <JPopLogo width={64} height={64} />
+        </div>
+        <h2 className="auth-title">Welcome to J-Pop Corner</h2>
+        <p className="auth-subtitle">Sign in to customize snacks and access exclusive Abra shipping promos</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-        <button type="button" className="btn btn-outline btn-full" onClick={handleGoogleLogin}>
-          Continue with Google
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={handleGoogleLogin}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+        >
+          <FaGoogle color="#EA4335" /> Google
         </button>
-        <button type="button" className="btn btn-primary btn-full" onClick={handleFacebookLogin} style={{ background: '#1877F2', borderColor: '#1877F2' }}>
-          Continue with Facebook (Recommended)
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleFacebookLogin}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#1877F2', borderColor: '#1877F2' }}
+        >
+          <FaFacebookF /> Facebook
         </button>
-        <p style={{ fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          We ask for your name and email to sync your orders and chat history.
-        </p>
       </div>
-      
-      <div style={{ textAlign: 'center', margin: '15px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>OR</div>
+
+      <div className="auth-divider">
+        <span>or sign in with email</span>
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -96,7 +115,7 @@ function LoginForm() {
           <input
             type="password"
             className="form-input"
-            placeholder="••••••••"
+            placeholder="Enter your password..."
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -113,12 +132,10 @@ function LoginForm() {
       </form>
 
       <div className="auth-footer">
-        Don't have an account? <Link href="/register">Create Account</Link>
-        <div style={{ marginTop: '12px' }}>
-          <Link href="/admin/login" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-            🔒 Admin Access Portal
-          </Link>
-        </div>
+        Don&apos;t have an account?{' '}
+        <Link href={`/register${redirectPath !== '/' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`}>
+          Create Account
+        </Link>
       </div>
     </div>
   );
@@ -127,7 +144,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="auth-page">
-      <Suspense fallback={<div className="auth-card"><p className="text-center">Loading...</p></div>}>
+      <Suspense fallback={<div className="auth-card">Loading...</div>}>
         <LoginForm />
       </Suspense>
     </div>

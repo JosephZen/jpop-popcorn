@@ -7,49 +7,165 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, '../data/local-db.json');
 const SEED_FILE = path.join(__dirname, '../data/seed-data.json');
+const LOCATIONS_FILE = path.join(__dirname, '../data/abra-locations.json');
 
 // Initialize local database with seed data if file doesn't exist
 const initData = () => {
-  if (fs.existsSync(DB_FILE)) {
-    try {
-      return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-    } catch (e) {
-      console.error('Error reading local-db.json, resetting to seed:', e.message);
-    }
-  }
-
-  let seedData = { products: [], settings: {} };
+  let seedData = { categories: [], products: [], customizationOptions: [], settings: {} };
   if (fs.existsSync(SEED_FILE)) {
     try {
       seedData = JSON.parse(fs.readFileSync(SEED_FILE, 'utf-8'));
-    } catch {}
+    } catch (e) {
+      console.error('Error reading seed-data.json:', e.message);
+    }
   }
 
-  const defaultAdminKey = 'admin123';
+  let locationsData = [];
+  if (fs.existsSync(LOCATIONS_FILE)) {
+    try {
+      locationsData = JSON.parse(fs.readFileSync(LOCATIONS_FILE, 'utf-8'));
+    } catch (e) {
+      console.error('Error reading abra-locations.json:', e.message);
+    }
+  }
+
+  const defaultAdminKey = 'AdminPopcorn2026';
   const defaultAdminUser = 'admin';
   const encryptedKey = bcrypt.hashSync(defaultAdminKey, 10);
   const usernameHash = bcrypt.hashSync(defaultAdminUser, 10);
   const demoPassHash = bcrypt.hashSync('demo1234', 10);
 
+  // If local-db.json already exists, load and ensure required collections exist
+  if (fs.existsSync(DB_FILE)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+      let modified = false;
+
+      if (!existing.categories || existing.categories.length === 0) {
+        existing.categories = seedData.categories || [];
+        modified = true;
+      }
+      if (!existing.customization_options || existing.customization_options.length === 0) {
+        existing.customization_options = (seedData.customizationOptions || []).map((o, idx) => ({ id: idx + 1, ...o }));
+        modified = true;
+      }
+      if (!existing.cart_items) {
+        existing.cart_items = [];
+        modified = true;
+      }
+      if (!existing.abra_municipalities || existing.abra_municipalities.length === 0) {
+        let mId = 1;
+        let bId = 1;
+        const municipalities = [];
+        const barangays = [];
+        for (const loc of locationsData) {
+          municipalities.push({
+            id: mId,
+            name: loc.name,
+            deliveryFee: loc.deliveryFee || '50.00',
+            isActive: true,
+          });
+          for (const bName of loc.barangays || []) {
+            barangays.push({
+              id: bId++,
+              municipalityId: mId,
+              name: bName,
+              customDeliveryFee: null,
+              isActive: true,
+            });
+          }
+          mId++;
+        }
+        existing.abra_municipalities = municipalities;
+        existing.abra_barangays = barangays;
+        modified = true;
+      }
+
+      // Check for Admin@gmail.com
+      const hasAdmin = existing.users && existing.users.some(u => u.email.toLowerCase() === 'admin@gmail.com');
+      if (!hasAdmin) {
+        existing.users = existing.users || [];
+        existing.users.unshift({
+          id: existing.users.length > 0 ? Math.max(...existing.users.map(u => u.id || 0)) + 1 : 1,
+          email: 'admin@gmail.com',
+          passwordHash: encryptedKey,
+          name: 'J-Pop Admin',
+          phone: '0912-345-6789',
+          address: 'Poblacion, San Juan, Abra',
+          role: 'ADMIN',
+          createdAt: new Date().toISOString(),
+        });
+        modified = true;
+      }
+
+      // Check if products have categoryId
+      if (existing.products) {
+        existing.products = existing.products.map(p => ({
+          ...p,
+          categoryId: p.categoryId || (p.category === 'mini-donut' ? 2 : 1),
+          basePrice: p.basePrice || p.price,
+          sizeLabel: p.sizeLabel || (p.name.includes('1kg') ? '1kg' : '500g'),
+        }));
+      }
+
+      if (modified) {
+        fs.writeFileSync(DB_FILE, JSON.stringify(existing, null, 2));
+      }
+      return existing;
+    } catch (e) {
+      console.error('Error reading local-db.json, recreating:', e.message);
+    }
+  }
+
+  // Generate municipalities and barangays
+  let mId = 1;
+  let bId = 1;
+  const municipalities = [];
+  const barangays = [];
+  for (const loc of locationsData) {
+    municipalities.push({
+      id: mId,
+      name: loc.name,
+      deliveryFee: loc.deliveryFee || '50.00',
+      isActive: true,
+    });
+    for (const bName of loc.barangays || []) {
+      barangays.push({
+        id: bId++,
+        municipalityId: mId,
+        name: bName,
+        customDeliveryFee: null,
+        isActive: true,
+      });
+    }
+    mId++;
+  }
+
   const initialDb = {
-    products: seedData.products?.map((p, idx) => ({
+    categories: seedData.categories || [],
+    products: (seedData.products || []).map((p, idx) => ({
       id: idx + 1,
       ...p,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    })) || [],
+    })),
+    customization_options: (seedData.customizationOptions || []).map((o, idx) => ({
+      id: idx + 1,
+      ...o,
+      createdAt: new Date().toISOString(),
+    })),
     admin_config: [
       { id: 1, encryptedKey, usernameHash }
     ],
     users: [
       {
         id: 1,
-        email: 'admin@jpop.local',
+        email: 'admin@gmail.com',
         passwordHash: encryptedKey,
-        name: 'J-Pop Admin (Joseph Zen)',
+        name: 'J-Pop Administrator',
         phone: '0912-345-6789',
-        address: 'Abra, Philippines',
-        role: 'admin',
+        address: 'Poblacion, San Juan, Abra',
+        role: 'ADMIN',
         createdAt: new Date().toISOString(),
       },
       {
@@ -58,13 +174,16 @@ const initData = () => {
         passwordHash: demoPassHash,
         name: 'Demo Customer',
         phone: '0912-345-6789',
-        address: '123 Sunshine Street, San Juan, Abra',
+        address: 'Poblacion, San Juan, Abra',
         role: 'customer',
         createdAt: new Date().toISOString(),
       },
     ],
+    cart_items: [],
     orders: [],
     order_items: [],
+    abra_municipalities: municipalities,
+    abra_barangays: barangays,
     site_settings: Object.entries(seedData.settings || {}).map(([key, value]) => ({
       key,
       value,
@@ -151,5 +270,5 @@ class LocalDB {
   }
 }
 
-export const localDb = new LocalDB();
+const localDb = new LocalDB();
 export default localDb;

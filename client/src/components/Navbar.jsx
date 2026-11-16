@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FiShoppingCart, FiUser, FiMenu, FiX, FiLogOut, FiSettings, FiSun, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../features/auth/AuthContext';
 import useCartStore from '../store/cartStore';
+import JPopLogo from './JPopLogo';
 import './Navbar.css';
 
 const Navbar = ({ onCartClick }) => {
@@ -34,12 +35,12 @@ const Navbar = ({ onCartClick }) => {
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__inner container">
-        {/* Brand with Custom SVG Logo */}
+        {/* Brand with Custom Popcorn Box Logo Component */}
         <Link href="/" className="navbar__brand">
-          <img src="/jpop-logo.svg" alt="J-Pop Popcorn" className="navbar__logo" />
+          <JPopLogo width={44} height={44} className="navbar__logo" />
           <div>
-            <span className="navbar__brand-text">J-Pop:</span>
-            <span className="navbar__brand-subtitle"> Kernel</span>
+            <span className="navbar__brand-text">J-Pop</span>
+            <span className="navbar__brand-subtitle"> Corner</span>
           </div>
         </Link>
 

@@ -41,7 +41,6 @@ api.interceptors.response.use(
       const currentPath = window.location.pathname;
       if (!currentPath.includes('/login')) {
         // Clear token if invalid
-        // localStorage.removeItem('jpop_token');
       }
     }
     return Promise.reject(error);
@@ -61,9 +60,43 @@ export const authAPI = {
   deleteUser: (id) => api.delete(`/auth/users/${id}`),
 };
 
+// ─── Categories API ───
+export const categoriesAPI = {
+  getAll: () => api.get('/categories'),
+  create: (data) => api.post('/categories', data),
+  update: (id, data) => api.put(`/categories/${id}`, data),
+  delete: (id) => api.delete(`/categories/${id}`),
+};
+
+// ─── Customizations API ───
+export const customizationsAPI = {
+  getAll: (categoryId) => api.get(`/customizations${categoryId ? `?categoryId=${categoryId}` : ''}`),
+  create: (data) => api.post('/customizations', data),
+  update: (id, data) => api.put(`/customizations/${id}`, data),
+  delete: (id) => api.delete(`/customizations/${id}`),
+};
+
+// ─── Cart API ───
+export const cartAPI = {
+  get: () => api.get('/cart'),
+  sync: (items) => api.post('/cart', { items }),
+  addItem: (data) => api.post('/cart', data),
+  clear: () => api.delete('/cart'),
+  deleteItem: (id) => api.delete(`/cart/${id}`),
+};
+
+// ─── Locations & Shipping Matrix API ───
+export const locationsAPI = {
+  getMunicipalities: () => api.get('/locations/municipalities'),
+  getBarangays: (municipalityId) => api.get(`/locations/barangays/${municipalityId}`),
+  getMatrix: () => api.get('/locations/matrix'),
+  updateMunicipalityFee: (id, data) => api.put(`/locations/municipalities/${id}/fee`, data),
+  updateBarangayFee: (id, data) => api.put(`/locations/barangays/${id}/fee`, data),
+};
+
 // ─── Products API ───
 export const productsAPI = {
-  getAll: () => api.get('/products'),
+  getAll: (params) => api.get('/products', { params }),
   getById: (id) => api.get(`/products/${id}`),
   adminGetAll: () => api.get('/products/admin/all'),
   create: (data) => api.post('/products', data),

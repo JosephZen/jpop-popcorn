@@ -1,10 +1,76 @@
 import { Router } from 'express';
 import { eq, desc } from 'drizzle-orm';
 import db, { isUsingNeon, localDb } from '../config/db.js';
-import { orders, orderItems, products, users } from '../models/schema.js';
+import { orders, orderItems, products, users, abraMunicipalities, abraBarangays, cartItems } from '../models/schema.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
+
+// Helper: Calculate shipping & free shipping promo
+const calculateShipping = async (items, deliveryMethod, municipalityId, barangayId) => {
+  if (deliveryMethod === 'pickup') {
+    return { shippingFee: 0, promoApplied: false, reason: 'Store Pickup' };
+  }
+
+  // Count popcorn items
+  let units1kg = 0;
+  let units500g = 0;
+
+  for (const item of items) {
+    const size = (item.size || item.sizeLabel || '').toLowerCase();
+    const name = (item.productName || item.name || '').toLowerCase();
+    const qty = parseInt(item.quantity) || 1;
+
+    if (size.includes('1kg') || name.includes('1kg')) {
+      units1kg += qty;
+    } else if (size.includes('500g') || name.includes('500g')) {
+      units500g += qty;
+    }
+  }
+
+  // Automated Free Shipping Promo Logic:
+  // Buying at least 5 units of 1kg Popcorn (₱60 each), OR
+  // Buying at least 10 units of 500g Popcorn (₱35 each).
+  if (units1kg >= 5 || units500g >= 10) {
+    return {
+      shippingFee: 0,
+      promoApplied: true,
+      reason: units1kg >= 5
+        ? `Free Shipping Promo: ${units1kg} units of 1kg Popcorn (min. 5)`
+        : `Free Shipping Promo: ${units500g} units of 500g Popcorn (min. 10)`
+    };
+  }
+
+  // Lookup standard rate for Abra municipality / barangay
+  let fee = 50.00;
+  if (barangayId) {
+    let b = null;
+    if (isUsingNeon && db) {
+      const [foundB] = await db.select().from(abraBarangays).where(eq(abraBarangays.id, parseInt(barangayId)));
+      b = foundB;
+    } else {
+      b = localDb.findOne('abra_barangays', row => row.id === parseInt(barangayId));
+    }
+    if (b && b.customDeliveryFee) {
+      return { shippingFee: parseFloat(b.customDeliveryFee), promoApplied: false };
+    }
+  }
+
+  if (municipalityId) {
+    let m = null;
+    if (isUsingNeon && db) {
+      const [foundM] = await db.select().from(abraMunicipalities).where(eq(abraMunicipalities.id, parseInt(municipalityId)));
+      m = foundM;
+    } else {
+      m = localDb.findOne('abra_municipalities', row => row.id === parseInt(municipalityId));
+    }
+    if (m && m.deliveryFee) {
+      fee = parseFloat(m.deliveryFee);
+    }
+  }
+
+  return { shippingFee: fee, promoApplied: false };
+};
 
 // ─── Customer: Create Order ───
 router.post('/', authenticate, async (req, res) => {
@@ -12,6 +78,8 @@ router.post('/', authenticate, async (req, res) => {
     const {
       items,
       deliveryMethod,
+      municipalityId,
+      barangayId,
       deliveryAddress,
       deliveryNotes,
       scheduledTime,
@@ -28,7 +96,7 @@ router.post('/', authenticate, async (req, res) => {
     }
 
     if (deliveryMethod === 'delivery' && !deliveryAddress && !deliveryNotes) {
-      return res.status(400).json({ error: 'Please provide delivery address or delivery notes.' });
+      return res.status(400).json({ error: 'Please provide a delivery address or notes.' });
     }
 
     // Resolve products & calculate subtotal
@@ -37,11 +105,12 @@ router.post('/', authenticate, async (req, res) => {
 
     for (const item of items) {
       let product = null;
+      const pId = parseInt(item.productId);
       if (isUsingNeon && db) {
-        const [found] = await db.select().from(products).where(eq(products.id, parseInt(item.productId)));
+        const [found] = await db.select().from(products).where(eq(products.id, pId));
         product = found;
       } else {
-        product = localDb.findOne('products', p => p.id === parseInt(item.productId));
+        product = localDb.findOne('products', p => p.id === pId);
       }
 
       if (!product) {
@@ -49,7 +118,7 @@ router.post('/', authenticate, async (req, res) => {
       }
 
       const qty = parseInt(item.quantity) || 1;
-      const unitPrice = parseFloat(product.price);
+      const unitPrice = parseFloat(product.price || product.basePrice || 35.00);
       calculatedSubtotal += unitPrice * qty;
 
       resolvedItems.push({
@@ -58,22 +127,26 @@ router.post('/', authenticate, async (req, res) => {
         quantity: qty,
         priceAtTime: unitPrice.toFixed(2),
         flavor: item.flavor || null,
-        size: item.size || null,
+        size: item.size || product.sizeLabel || null,
+        customizationPayload: item.customizationPayload || {},
       });
     }
 
-    // Shipping calculation:
-    // Order & Pickup is default. Free delivery to eligible areas.
-    // The frontend will handle area eligibility validation.
-    let shippingFee = 0;
-
+    // Calculate shipping with promo rules
+    const shippingResult = await calculateShipping(resolvedItems, deliveryMethod, municipalityId, barangayId);
+    const shippingFee = shippingResult.shippingFee;
     const grandTotal = (calculatedSubtotal + shippingFee).toFixed(2);
 
     if (isUsingNeon && db) {
       const [order] = await db.insert(orders).values({
         userId: req.user.id,
+        status: 'pending',
+        subtotal: calculatedSubtotal.toFixed(2),
+        shippingFee: shippingFee.toFixed(2),
         total: grandTotal,
         deliveryMethod,
+        municipalityId: municipalityId ? parseInt(municipalityId) : null,
+        barangayId: barangayId ? parseInt(barangayId) : null,
         deliveryAddress: deliveryAddress ? deliveryAddress.trim() : null,
         deliveryNotes: deliveryNotes ? deliveryNotes.trim() : null,
         scheduledTime: scheduledTime ? new Date(scheduledTime) : null,
@@ -89,17 +162,25 @@ router.post('/', authenticate, async (req, res) => {
           priceAtTime: item.priceAtTime,
           flavor: item.flavor,
           size: item.size,
+          customizationPayload: item.customizationPayload,
         });
       }
 
+      // Clear user persistent cart
+      await db.delete(cartItems).where(eq(cartItems.userId, req.user.id));
+
       const savedItems = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
-      return res.status(201).json({ order: { ...order, items: savedItems } });
+      return res.status(201).json({ order: { ...order, items: savedItems, promoApplied: shippingResult.promoApplied } });
     } else {
       const order = localDb.insert('orders', {
         userId: req.user.id,
         status: 'pending',
+        subtotal: calculatedSubtotal.toFixed(2),
+        shippingFee: shippingFee.toFixed(2),
         total: grandTotal,
         deliveryMethod,
+        municipalityId: municipalityId ? parseInt(municipalityId) : null,
+        barangayId: barangayId ? parseInt(barangayId) : null,
         deliveryAddress: deliveryAddress ? deliveryAddress.trim() : null,
         deliveryNotes: deliveryNotes ? deliveryNotes.trim() : null,
         scheduledTime: scheduledTime || null,
@@ -117,10 +198,14 @@ router.post('/', authenticate, async (req, res) => {
           priceAtTime: item.priceAtTime,
           flavor: item.flavor,
           size: item.size,
+          customizationPayload: item.customizationPayload,
         });
       });
 
-      return res.status(201).json({ order: { ...order, items: savedItems } });
+      // Clear user persistent cart
+      localDb.delete('cart_items', c => c.userId === req.user.id);
+
+      return res.status(201).json({ order: { ...order, items: savedItems, promoApplied: shippingResult.promoApplied } });
     }
   } catch (err) {
     console.error('Create order error:', err);
@@ -147,6 +232,7 @@ router.get('/', authenticate, async (req, res) => {
             priceAtTime: orderItems.priceAtTime,
             flavor: orderItems.flavor,
             size: orderItems.size,
+            customizationPayload: orderItems.customizationPayload,
           }).from(orderItems)
             .leftJoin(products, eq(orderItems.productId, products.id))
             .where(eq(orderItems.orderId, order.id));
@@ -181,6 +267,8 @@ router.get('/admin/all', authenticate, requireAdmin, async (req, res) => {
         customerEmail: users.email,
         customerPhone: users.phone,
         status: orders.status,
+        subtotal: orders.subtotal,
+        shippingFee: orders.shippingFee,
         total: orders.total,
         deliveryMethod: orders.deliveryMethod,
         deliveryAddress: orders.deliveryAddress,
@@ -204,6 +292,7 @@ router.get('/admin/all', authenticate, requireAdmin, async (req, res) => {
             priceAtTime: orderItems.priceAtTime,
             flavor: orderItems.flavor,
             size: orderItems.size,
+            customizationPayload: orderItems.customizationPayload,
           }).from(orderItems)
             .leftJoin(products, eq(orderItems.productId, products.id))
             .where(eq(orderItems.orderId, order.id));

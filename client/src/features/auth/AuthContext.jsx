@@ -90,6 +90,8 @@ export const AuthProvider = ({ children }) => {
     } catch {}
   };
 
+  const isAdmin = (user?.role || '').toLowerCase() === 'admin';
+
   return (
     <AuthContext.Provider
       value={{
@@ -99,7 +101,7 @@ export const AuthProvider = ({ children }) => {
         theme,
         toggleTheme,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin,
         login,
         loginWithToken,
         adminLogin,
@@ -120,5 +122,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export default AuthContext;
