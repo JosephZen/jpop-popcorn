@@ -1,37 +1,22 @@
 "use client";
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiArrowRight } from 'react-icons/fi';
-import { FaGoogle, FaFacebookF } from 'react-icons/fa';
+import { FiArrowRight, FiLock, FiMail } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import JPopLogo from '../../src/components/JPopLogo';
 import toast from 'react-hot-toast';
 import '../../src/pages/AuthPages.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, loginWithToken } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
-  const token = searchParams.get('token');
-
-  useEffect(() => {
-    if (token) {
-      loginWithToken(token).then(() => {
-        toast.success('Successfully logged in with social account! 🍿');
-        router.push(redirectPath);
-      }).catch(() => {
-        toast.error('Failed to log in with social account.');
-      });
-    }
-  }, [token, loginWithToken, router, redirectPath]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,14 +41,6 @@ function LoginForm() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/auth/google`;
-  };
-
-  const handleFacebookLogin = () => {
-    window.location.href = `${API_BASE}/auth/facebook`;
-  };
-
   return (
     <div className="auth-card">
       <div className="auth-header">
@@ -74,32 +51,11 @@ function LoginForm() {
         <p className="auth-subtitle">Sign in to customize snacks and access exclusive Abra shipping promos</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-        <button
-          type="button"
-          className="btn btn-outline"
-          onClick={handleGoogleLogin}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-        >
-          <FaGoogle color="#EA4335" /> Google
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleFacebookLogin}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#1877F2', borderColor: '#1877F2' }}
-        >
-          <FaFacebookF /> Facebook
-        </button>
-      </div>
-
-      <div className="auth-divider">
-        <span>or sign in with email</span>
-      </div>
-
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">Email Address</label>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FiMail /> Email Address
+          </label>
           <input
             type="email"
             className="form-input"
@@ -107,11 +63,14 @@ function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Password</label>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FiLock /> Password
+          </label>
           <input
             type="password"
             className="form-input"
@@ -119,6 +78,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="current-password"
           />
         </div>
 
@@ -131,10 +91,16 @@ function LoginForm() {
         </button>
       </form>
 
-      <div className="auth-footer">
+      <div className="auth-footer" style={{ marginTop: '20px' }}>
         Don&apos;t have an account?{' '}
         <Link href={`/register${redirectPath !== '/' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`}>
           Create Account
+        </Link>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.82rem' }}>
+        <Link href="/admin/login" style={{ color: 'var(--text-muted, #7f8c8d)', textDecoration: 'none' }}>
+          🔒 Administrator Access
         </Link>
       </div>
     </div>

@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiArrowRight } from 'react-icons/fi';
-import { FaGoogle, FaFacebookF } from 'react-icons/fa';
+import { FiArrowRight, FiUser, FiMail, FiLock, FiPhone, FiMapPin } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import JPopLogo from '../../src/components/JPopLogo';
 import toast from 'react-hot-toast';
 import '../../src/pages/AuthPages.css';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 function RegisterForm() {
   const [form, setForm] = useState({
@@ -22,27 +19,20 @@ function RegisterForm() {
     address: '',
   });
   const [loading, setLoading] = useState(false);
-  const { register, loginWithToken } = useAuth();
+  const { register } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
-  const token = searchParams.get('token');
-
-  useEffect(() => {
-    if (token) {
-      loginWithToken(token).then(() => {
-        toast.success('Successfully logged in with social account! 🍿');
-        router.push(redirectPath);
-      }).catch(() => {
-        toast.error('Failed to log in with social account.');
-      });
-    }
-  }, [token, loginWithToken, router, redirectPath]);
 
   const updateField = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.name || !form.email || !form.password) {
+      toast.error('Please fill in your name, email, and password.');
+      return;
+    }
 
     if (form.password !== form.confirmPassword) {
       toast.error('Passwords do not match.');
@@ -72,14 +62,6 @@ function RegisterForm() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/auth/google`;
-  };
-
-  const handleFacebookLogin = () => {
-    window.location.href = `${API_BASE}/auth/facebook`;
-  };
-
   return (
     <div className="auth-card">
       <div className="auth-header">
@@ -90,32 +72,11 @@ function RegisterForm() {
         <p className="auth-subtitle">Create an account to save custom snacks & order fresh across Abra</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-        <button
-          type="button"
-          className="btn btn-outline"
-          onClick={handleGoogleLogin}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-        >
-          <FaGoogle color="#EA4335" /> Google
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleFacebookLogin}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#1877F2', borderColor: '#1877F2' }}
-        >
-          <FaFacebookF /> Facebook
-        </button>
-      </div>
-
-      <div className="auth-divider">
-        <span>or create an account with email</span>
-      </div>
-
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">Full Name</label>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FiUser /> Full Name
+          </label>
           <input
             type="text"
             className="form-input"
@@ -123,11 +84,14 @@ function RegisterForm() {
             value={form.name}
             onChange={(e) => updateField('name', e.target.value)}
             required
+            autoComplete="name"
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Email Address</label>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FiMail /> Email Address
+          </label>
           <input
             type="email"
             className="form-input"
@@ -135,12 +99,15 @@ function RegisterForm() {
             value={form.email}
             onChange={(e) => updateField('email', e.target.value)}
             required
+            autoComplete="email"
           />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiLock /> Password
+            </label>
             <input
               type="password"
               className="form-input"
@@ -148,11 +115,14 @@ function RegisterForm() {
               value={form.password}
               onChange={(e) => updateField('password', e.target.value)}
               required
+              autoComplete="new-password"
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Confirm Password</label>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiLock /> Confirm
+            </label>
             <input
               type="password"
               className="form-input"
@@ -160,29 +130,36 @@ function RegisterForm() {
               value={form.confirmPassword}
               onChange={(e) => updateField('confirmPassword', e.target.value)}
               required
+              autoComplete="new-password"
             />
           </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Mobile Number (Optional)</label>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FiPhone /> Mobile Number (Optional)
+          </label>
           <input
             type="tel"
             className="form-input"
             placeholder="0912-345-6789"
             value={form.phone}
             onChange={(e) => updateField('phone', e.target.value)}
+            autoComplete="tel"
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Delivery Address (Abra)</label>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FiMapPin /> Delivery Address (Abra)
+          </label>
           <input
             type="text"
             className="form-input"
             placeholder="Barangay, Municipality, Abra"
             value={form.address}
             onChange={(e) => updateField('address', e.target.value)}
+            autoComplete="street-address"
           />
         </div>
 
@@ -195,7 +172,7 @@ function RegisterForm() {
         </button>
       </form>
 
-      <div className="auth-footer">
+      <div className="auth-footer" style={{ marginTop: '20px' }}>
         Already have an account?{' '}
         <Link href={`/login${redirectPath !== '/' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`}>
           Sign In

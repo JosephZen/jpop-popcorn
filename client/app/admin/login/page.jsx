@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiLock, FiKey, FiShield, FiArrowRight, FiUser } from 'react-icons/fi';
+import { FiLock, FiKey, FiArrowRight, FiUser, FiCheckCircle } from 'react-icons/fi';
 import { useAuth } from '../../../src/features/auth/AuthContext';
 import JPopLogo from '../../../src/components/JPopLogo';
 import toast from 'react-hot-toast';
@@ -16,33 +16,42 @@ export default function AdminLoginPage() {
   const { adminLogin, login } = useAuth();
   const router = useRouter();
 
+  const handleFillDefault = () => {
+    setUsername('Admin@gmail.com');
+    setKey('AdminPopcorn2026');
+    toast.success('Default Admin credentials filled!');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!key || !username) {
-      toast.error('Credentials are required.');
+      toast.error('Email and password/key are required.');
       return;
     }
 
     setLoading(true);
     try {
-      // If user entered email format, attempt email/password login
-      if (username.includes('@')) {
-        const res = await login(username, key);
-        if ((res?.user?.role || '').toLowerCase() === 'admin') {
-          toast.success('Admin authorization verified! 👑');
-          router.push('/admin/dashboard');
-          return;
-        } else {
-          toast.error('Access denied. Account is not an administrator.');
-          return;
-        }
+      // 1. Try standard login first (handles Admin@gmail.com / AdminPopcorn2026)
+      const res = await login(username, key);
+      if ((res?.user?.role || '').toLowerCase() === 'admin') {
+        toast.success('Admin authorization verified! 👑');
+        router.push('/admin/dashboard');
+        return;
       }
 
+      // If user isn't admin via standard login, try master adminLogin
       await adminLogin(key, username);
       toast.success('Admin authorization verified! 👑');
       router.push('/admin/dashboard');
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Authorization failed. Please check credentials.');
+    } catch {
+      // 2. Fallback attempt via adminLogin
+      try {
+        await adminLogin(key, username);
+        toast.success('Admin authorization verified! 👑');
+        router.push('/admin/dashboard');
+      } catch (adminErr) {
+        toast.error(adminErr.response?.data?.error || 'Authorization failed. Please check credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,15 +69,37 @@ export default function AdminLoginPage() {
         </div>
 
         <div style={{
-          background: 'var(--bg-subtle)',
-          padding: '10px 14px',
-          borderRadius: '8px',
+          background: 'var(--bg-subtle, #f8f9fa)',
+          padding: '12px 14px',
+          borderRadius: '10px',
           marginBottom: '18px',
-          fontSize: '0.82rem',
-          border: '1px solid var(--border-color)',
+          fontSize: '0.84rem',
+          border: '1px solid var(--border-color, #e9ecef)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          alignItems: 'center',
           textAlign: 'center',
         }}>
-          <span>Default Admin: <strong>Admin@gmail.com</strong></span>
+          <div>
+            Default Admin: <strong>Admin@gmail.com</strong>
+          </div>
+          <button
+            type="button"
+            onClick={handleFillDefault}
+            style={{
+              background: 'none',
+              border: '1px solid var(--color-primary, #8B1A1A)',
+              color: 'var(--color-primary, #8B1A1A)',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+            }}
+          >
+            Auto-fill Default Admin
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -83,12 +114,13 @@ export default function AdminLoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              autoComplete="username"
             />
           </div>
 
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FiKey /> Password or Master Encryption Key
+              <FiKey /> Password or Master Key
             </label>
             <input
               type="password"
@@ -97,6 +129,7 @@ export default function AdminLoginPage() {
               value={key}
               onChange={(e) => setKey(e.target.value)}
               required
+              autoComplete="current-password"
             />
           </div>
 
@@ -105,12 +138,15 @@ export default function AdminLoginPage() {
             className="btn btn-primary btn-full btn-lg mt-md"
             disabled={loading}
           >
-            {loading ? 'Authenticating...' : <>Authorize Access <FiArrowRight /></>}
+            {loading ? 'Authenticating...' : <>Access Admin Dashboard <FiArrowRight /></>}
           </button>
         </form>
 
-        <div className="auth-footer">
-          <Link href="/">← Back to Storefront</Link>
+        <div className="auth-footer" style={{ marginTop: '20px' }}>
+          Return to Customer Store?{' '}
+          <Link href="/login">
+            Customer Login
+          </Link>
         </div>
       </div>
     </div>

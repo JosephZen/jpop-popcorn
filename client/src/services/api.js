@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE = (rawApiUrl && !rawApiUrl.includes('api.castrojosephzen.shop')) ? rawApiUrl : '/api';
 
 export const formatImageUrl = (url) => {
   if (!url) return '/jpop-logo.svg';

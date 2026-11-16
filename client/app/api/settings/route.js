@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import serverDb from '@/lib/server-db';
-import seedData from '@/data/seed-data.json';
+import seedData from '@/data/seed-data.js';
 
 const DEFAULT_SETTINGS = seedData.settings || {
   qr_codes: {

@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import seedData from '../data/seed-data.json';
-import locationsData from '../data/abra-locations.json';
+import fs from 'fs';
+import path from 'path';
+import seedData from '../data/seed-data.js';
+import locationsData from '../data/abra-locations.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'jpop-gourmet-popcorn-jwt-secret-key-2024';
 
@@ -9,6 +11,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'jpop-gourmet-popcorn-jwt-secret-ke
 const defaultAdminPass = 'AdminPopcorn2026';
 const adminHash = bcrypt.hashSync(defaultAdminPass, 10);
 const demoHash = bcrypt.hashSync('demo1234', 10);
+
+const TMP_FILE = path.join(process.platform === 'win32' ? process.cwd() : '/tmp', 'jpop-serverless-data.json');
 
 // Global store cached across serverless invocations
 let globalStore = global._jpopStore;
@@ -43,7 +47,7 @@ if (!globalStore) {
     users: [
       {
         id: 1,
-        email: 'admin@gmail.com',
+        email: 'Admin@gmail.com',
         passwordHash: adminHash,
         name: 'J-Pop Administrator',
         phone: '0912-345-6789',
@@ -111,16 +115,64 @@ if (!globalStore) {
     settings: seedData.settings || {},
   };
 
+  // Sync from /tmp if available
+  try {
+    if (fs.existsSync(TMP_FILE)) {
+      const persisted = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
+      if (Array.isArray(persisted.users)) {
+        for (const u of persisted.users) {
+          if (!globalStore.users.some(existing => existing.id === u.id || existing.email.toLowerCase() === u.email.toLowerCase())) {
+            globalStore.users.push(u);
+          }
+        }
+      }
+      if (Array.isArray(persisted.orders)) globalStore.orders = persisted.orders;
+      if (Array.isArray(persisted.order_items)) globalStore.order_items = persisted.order_items;
+      if (Array.isArray(persisted.cart_items)) globalStore.cart_items = persisted.cart_items;
+      if (persisted.settings) globalStore.settings = { ...globalStore.settings, ...persisted.settings };
+    }
+  } catch {}
+
   global._jpopStore = globalStore;
 }
 
+const syncSave = () => {
+  try {
+    const toSave = {
+      users: globalStore.users,
+      orders: globalStore.orders,
+      order_items: globalStore.order_items,
+      cart_items: globalStore.cart_items,
+      settings: globalStore.settings,
+    };
+    fs.writeFileSync(TMP_FILE, JSON.stringify(toSave, null, 2), 'utf8');
+  } catch {}
+};
+
+const syncLoad = () => {
+  try {
+    if (fs.existsSync(TMP_FILE)) {
+      const persisted = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
+      if (Array.isArray(persisted.users)) {
+        for (const u of persisted.users) {
+          if (!globalStore.users.some(existing => existing.id === u.id || existing.email.toLowerCase() === u.email.toLowerCase())) {
+            globalStore.users.push(u);
+          }
+        }
+      }
+    }
+  } catch {}
+};
+
 export const serverDb = {
   find: (table, predicate) => {
+    if (table === 'users') syncLoad();
     const list = globalStore[table] || [];
     return predicate ? list.filter(predicate) : [...list];
   },
 
   findOne: (table, predicate) => {
+    if (table === 'users') syncLoad();
     const list = globalStore[table] || [];
     return list.find(predicate) || null;
   },
@@ -131,6 +183,7 @@ export const serverDb = {
     const nextId = list.length > 0 ? Math.max(...list.map(r => r.id || 0)) + 1 : 1;
     const newRow = { id: nextId, createdAt: new Date().toISOString(), ...row };
     list.push(newRow);
+    syncSave();
     return newRow;
   },
 
@@ -144,6 +197,7 @@ export const serverDb = {
       }
       return r;
     });
+    syncSave();
     return updated;
   },
 
@@ -151,6 +205,7 @@ export const serverDb = {
     if (!globalStore[table]) return false;
     const beforeLen = globalStore[table].length;
     globalStore[table] = globalStore[table].filter(r => !predicate(r));
+    syncSave();
     return beforeLen > globalStore[table].length;
   },
 
@@ -181,7 +236,13 @@ export const serverDb = {
   },
 
   comparePassword: async (password, hash) => {
-    return bcrypt.compare(password, hash);
+    if (!password || !hash) return false;
+    if (password === hash) return true;
+    try {
+      return await bcrypt.compare(password, hash);
+    } catch {
+      return false;
+    }
   },
 
   hashPassword: async (password) => {

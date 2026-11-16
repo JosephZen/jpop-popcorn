@@ -11,24 +11,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState('light');
 
-  // Load saved token & theme on mount
+  // Load saved token, user & theme on mount
   useEffect(() => {
     const savedToken = localStorage.getItem('jpop_token');
+    const savedUserStr = localStorage.getItem('jpop_user');
     const savedTheme = localStorage.getItem('jpop_theme') || 'light';
 
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
 
+    let parsedUser = null;
+    try {
+      if (savedUserStr) parsedUser = JSON.parse(savedUserStr);
+    } catch {}
+
     if (savedToken) {
       setToken(savedToken);
+      if (parsedUser) setUser(parsedUser);
+
       authAPI.getMe()
         .then(({ data }) => {
-          setUser(data.user);
+          if (data?.user) {
+            setUser(data.user);
+            localStorage.setItem('jpop_user', JSON.stringify(data.user));
+          }
         })
-        .catch(() => {
-          localStorage.removeItem('jpop_token');
-          setToken(null);
-          setUser(null);
+        .catch((err) => {
+          // Only clear if 401 unauthorized
+          if (err.response?.status === 401) {
+            localStorage.removeItem('jpop_token');
+            localStorage.removeItem('jpop_user');
+            setToken(null);
+            setUser(null);
+          }
         })
         .finally(() => {
           setLoading(false);
@@ -48,6 +63,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const { data } = await authAPI.login({ email, password });
     localStorage.setItem('jpop_token', data.token);
+    localStorage.setItem('jpop_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -56,6 +72,7 @@ export const AuthProvider = ({ children }) => {
   const adminLogin = async (key, username) => {
     const { data } = await authAPI.adminLogin({ key, username });
     localStorage.setItem('jpop_token', data.token);
+    localStorage.setItem('jpop_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -65,13 +82,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('jpop_token', newToken);
     setToken(newToken);
     const { data } = await authAPI.getMe();
-    setUser(data.user);
+    if (data?.user) {
+      localStorage.setItem('jpop_user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
     return data;
   };
 
   const register = async (formData) => {
     const { data } = await authAPI.register(formData);
     localStorage.setItem('jpop_token', data.token);
+    localStorage.setItem('jpop_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -79,6 +100,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('jpop_token');
+    localStorage.removeItem('jpop_user');
     setToken(null);
     setUser(null);
   };
@@ -86,7 +108,10 @@ export const AuthProvider = ({ children }) => {
   const refreshProfile = async () => {
     try {
       const { data } = await authAPI.getMe();
-      setUser(data.user);
+      if (data?.user) {
+        localStorage.setItem('jpop_user', JSON.stringify(data.user));
+        setUser(data.user);
+      }
     } catch {}
   };
 
@@ -99,12 +124,11 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         theme,
-        toggleTheme,
-        isAuthenticated: !!user,
         isAdmin,
+        toggleTheme,
         login,
-        loginWithToken,
         adminLogin,
+        loginWithToken,
         register,
         logout,
         refreshProfile,
