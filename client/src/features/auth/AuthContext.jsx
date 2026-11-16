@@ -116,6 +116,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
+  const isAuthenticated = Boolean(user);
 
   return (
     <AuthContext.Provider
@@ -124,6 +125,7 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         theme,
+        isAuthenticated,
         isAdmin,
         toggleTheme,
         login,

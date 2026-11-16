@@ -7,6 +7,7 @@ import { FiShoppingCart, FiUser, FiMenu, FiX, FiLogOut, FiSettings, FiSun, FiMoo
 import { useAuth } from '../features/auth/AuthContext';
 import useCartStore from '../store/cartStore';
 import JPopLogo from './JPopLogo';
+import toast from 'react-hot-toast';
 import './Navbar.css';
 
 const Navbar = ({ onCartClick }) => {
@@ -29,8 +30,11 @@ const Navbar = ({ onCartClick }) => {
 
   const handleLogout = () => {
     logout();
+    toast.success('Logged out successfully. See you soon! 🍿');
     router.push('/');
   };
+
+  const isUserLoggedIn = isAuthenticated || Boolean(user);
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
@@ -66,6 +70,38 @@ const Navbar = ({ onCartClick }) => {
               <FiSettings size={16} /> Admin Portal
             </Link>
           )}
+
+          {/* Mobile Profile & Logout links */}
+          {mobileOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '8px' }}>
+              {isUserLoggedIn ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className={`navbar__link ${pathname === '/profile' ? 'navbar__link--active' : ''}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <FiUser size={16} /> Profile ({user?.name?.split(' ')[0] || 'My Account'})
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="navbar__link"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--color-danger, #e74c3c)' }}
+                  >
+                    <FiLogOut size={16} /> Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="navbar__link"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <FiUser size={16} /> Login / Register
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions (Dark toggle, Cart, User Profile) */}
@@ -94,20 +130,25 @@ const Navbar = ({ onCartClick }) => {
           )}
 
           {/* User Auth Menu */}
-          {isAuthenticated ? (
-            <div className="navbar__user-menu">
+          {isUserLoggedIn ? (
+            <div className="navbar__user-menu" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Link
-                href={isAdmin ? '/admin/dashboard' : '/profile'}
+                href="/profile"
                 className="navbar__user-btn"
+                title="View Profile"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <FiUser size={16} />
-                <span className="navbar__user-name">{user?.name?.split(' ')[0]}</span>
+                <span className="navbar__user-name">
+                  {isAdmin ? 'Admin' : (user?.name?.split(' ')[0] || 'Profile')}
+                </span>
               </Link>
               <button
                 className="navbar__icon-btn"
                 onClick={handleLogout}
                 title="Logout"
                 aria-label="Logout"
+                style={{ color: 'var(--text-muted)' }}
               >
                 <FiLogOut size={16} />
               </button>

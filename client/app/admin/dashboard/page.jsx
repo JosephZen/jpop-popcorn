@@ -22,6 +22,8 @@ import {
   FiGrid,
   FiChevronDown,
   FiChevronUp,
+  FiLogOut,
+  FiUser,
 } from 'react-icons/fi';
 import { useAuth } from '../../../src/features/auth/AuthContext';
 import {
@@ -41,8 +43,14 @@ import JPopLogo from '../../../src/components/JPopLogo';
 import '../../../src/pages/AdminDashboard.css';
 
 export default function AdminDashboardPage() {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, loading, user, logout } = useAuth();
   const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Admin logged out successfully.');
+    router.push('/admin/login');
+  };
 
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
@@ -512,9 +520,19 @@ export default function AdminDashboardPage() {
             </p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <button className="btn btn-outline btn-sm" onClick={() => router.push('/')}>
-            View Public Site
+            <FiExternalLink size={14} /> View Public Site
+          </button>
+          <button className="btn btn-outline btn-sm" onClick={() => router.push('/profile')}>
+            <FiUser size={14} /> Profile ({user?.name?.split(' ')[0] || 'Admin'})
+          </button>
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={handleLogout}
+            style={{ color: 'var(--color-danger, #e74c3c)', borderColor: 'var(--color-danger, #e74c3c)', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <FiLogOut size={14} /> Logout
           </button>
         </div>
       </div>
@@ -1062,6 +1080,107 @@ export default function AdminDashboardPage() {
                 />
               </div>
             </div>
+
+            {/* QR Codes Payment Section */}
+            <div style={{ gridColumn: '1 / -1', background: 'var(--bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div>
+                  <h4 style={{ margin: 0 }}>QR Payment Methods (GCash, Maya, InstaPay)</h4>
+                  <p className="text-muted" style={{ margin: '4px 0 0 0', fontSize: '0.86rem' }}>
+                    Upload custom QR code images or paste direct image links. Customers scan these during checkout.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                {['gcash', 'maya', 'instapay'].map((methodKey) => {
+                  const qr = settingsForm.qr_codes?.[methodKey] || {
+                    label: methodKey === 'gcash' ? 'GCash' : methodKey === 'maya' ? 'Maya' : 'InstaPay',
+                    accountName: '',
+                    accountNumber: '',
+                    imageUrl: ''
+                  };
+                  return (
+                    <div key={methodKey} style={{ border: '1px solid var(--border-color)', padding: '16px', borderRadius: '10px', background: 'var(--bg-subtle, #f9f9f9)' }}>
+                      <h5 style={{ textTransform: 'uppercase', marginBottom: '12px', color: 'var(--color-primary)' }}>
+                        {qr.label || methodKey}
+                      </h5>
+
+                      <div className="form-group" style={{ marginBottom: '10px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Account Name</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={qr.accountName || ''}
+                          onChange={(e) => setSettingsForm({
+                            ...settingsForm,
+                            qr_codes: {
+                              ...settingsForm.qr_codes,
+                              [methodKey]: { ...qr, accountName: e.target.value }
+                            }
+                          })}
+                          placeholder="Account Name"
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '10px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Account / Phone Number</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={qr.accountNumber || ''}
+                          onChange={(e) => setSettingsForm({
+                            ...settingsForm,
+                            qr_codes: {
+                              ...settingsForm.qr_codes,
+                              [methodKey]: { ...qr, accountNumber: e.target.value }
+                            }
+                          })}
+                          placeholder="0912-345-6789"
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '10px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>QR Image URL</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={qr.imageUrl || ''}
+                          onChange={(e) => setSettingsForm({
+                            ...settingsForm,
+                            qr_codes: {
+                              ...settingsForm.qr_codes,
+                              [methodKey]: { ...qr, imageUrl: e.target.value }
+                            }
+                          })}
+                          placeholder="Paste image link or upload below"
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '10px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Upload QR Code Image</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleQrImageUpload(methodKey, e)}
+                          className="form-input"
+                        />
+                      </div>
+
+                      {qr.imageUrl && (
+                        <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                          <img
+                            src={formatImageUrl(qr.imageUrl)}
+                            alt={`${methodKey} QR`}
+                            style={{ width: '130px', height: '130px', objectFit: 'contain', background: '#fff', padding: '6px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1147,10 +1266,49 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Image Upload</label>
-                <input type="file" accept="image/*" onChange={handleProductImageUpload} className="form-input" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>Product Image</label>
+                  {productForm.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, imageUrl: '' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--color-danger, #e74c3c)', cursor: 'pointer', fontSize: '0.8rem' }}
+                    >
+                      Remove Image
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Paste direct Image URL (https://... or data:...)"
+                  value={productForm.imageUrl}
+                  onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
+                  style={{ marginBottom: '8px' }}
+                />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProductImageUpload}
+                    className="form-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+
                 {productForm.imageUrl && (
-                  <img src={formatImageUrl(productForm.imageUrl)} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', marginTop: '8px', borderRadius: '6px' }} />
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img
+                      src={formatImageUrl(productForm.imageUrl)}
+                      alt="Preview"
+                      style={{ width: '88px', height: '88px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                    />
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      Image preview active. Click &quot;Save Product&quot; to apply.
+                    </span>
+                  </div>
                 )}
               </div>
 

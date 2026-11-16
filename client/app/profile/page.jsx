@@ -2,15 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiPackage, FiSave, FiMapPin, FiPhone, FiMail, FiExternalLink, FiClock } from 'react-icons/fi';
+import { FiUser, FiPackage, FiSave, FiMapPin, FiPhone, FiMail, FiExternalLink, FiClock, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import { ordersAPI, authAPI } from '../../src/services/api';
 import toast from 'react-hot-toast';
 import '../../src/pages/ProfilePage.css';
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, loading, refreshProfile } = useAuth();
+  const { user, isAuthenticated, loading, refreshProfile, logout } = useAuth();
   const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully.');
+    router.push('/');
+  };
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -133,6 +139,15 @@ export default function ProfilePage() {
                 disabled={savingProfile}
               >
                 <FiSave /> {savingProfile ? 'Saving...' : 'Save Profile Changes'}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-outline btn-full"
+                onClick={handleLogout}
+                style={{ marginTop: '12px', color: 'var(--color-danger, #e74c3c)', borderColor: 'var(--color-danger, #e74c3c)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <FiLogOut /> Log Out
               </button>
             </form>
           </div>

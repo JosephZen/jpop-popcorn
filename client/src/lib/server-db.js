@@ -140,6 +140,11 @@ const syncSave = () => {
   try {
     const toSave = {
       users: globalStore.users,
+      products: globalStore.products,
+      categories: globalStore.categories,
+      customization_options: globalStore.customization_options,
+      abra_municipalities: globalStore.abra_municipalities,
+      abra_barangays: globalStore.abra_barangays,
       orders: globalStore.orders,
       order_items: globalStore.order_items,
       cart_items: globalStore.cart_items,
@@ -153,6 +158,11 @@ const syncLoad = () => {
   try {
     if (fs.existsSync(TMP_FILE)) {
       const persisted = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
+      if (Array.isArray(persisted.products)) globalStore.products = persisted.products;
+      if (Array.isArray(persisted.categories)) globalStore.categories = persisted.categories;
+      if (Array.isArray(persisted.customization_options)) globalStore.customization_options = persisted.customization_options;
+      if (Array.isArray(persisted.abra_municipalities)) globalStore.abra_municipalities = persisted.abra_municipalities;
+      if (Array.isArray(persisted.abra_barangays)) globalStore.abra_barangays = persisted.abra_barangays;
       if (Array.isArray(persisted.users)) {
         for (const u of persisted.users) {
           if (!globalStore.users.some(existing => existing.id === u.id || existing.email.toLowerCase() === u.email.toLowerCase())) {
@@ -160,19 +170,23 @@ const syncLoad = () => {
           }
         }
       }
+      if (Array.isArray(persisted.orders)) globalStore.orders = persisted.orders;
+      if (Array.isArray(persisted.order_items)) globalStore.order_items = persisted.order_items;
+      if (Array.isArray(persisted.cart_items)) globalStore.cart_items = persisted.cart_items;
+      if (persisted.settings) globalStore.settings = { ...globalStore.settings, ...persisted.settings };
     }
   } catch {}
 };
 
 export const serverDb = {
   find: (table, predicate) => {
-    if (table === 'users') syncLoad();
+    syncLoad();
     const list = globalStore[table] || [];
     return predicate ? list.filter(predicate) : [...list];
   },
 
   findOne: (table, predicate) => {
-    if (table === 'users') syncLoad();
+    syncLoad();
     const list = globalStore[table] || [];
     return list.find(predicate) || null;
   },
