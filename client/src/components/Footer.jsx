@@ -27,6 +27,7 @@ const Footer = () => {
               <li><Link href="/" className="footer__link">Home</Link></li>
               <li><Link href="/shop" className="footer__link">Shop Flavors & Donuts</Link></li>
               <li><Link href="/profile" className="footer__link">My Account & Orders</Link></li>
+              <li><Link href="/privacy" className="footer__link">Privacy Policy</Link></li>
               <li><Link href="/admin/login" className="footer__link">Admin Access</Link></li>
             </ul>
           </div>
