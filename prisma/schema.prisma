@@ -1,0 +1,258 @@
+// ==============================================================================
+// Prisma Schema for J-Pop Corner E-Commerce & Custom Snack Platform
+// Configured for NeonDB Serverless PostgreSQL
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  preparing
+  ready
+  delivered
+  cancelled
+}
+
+enum DeliveryMethod {
+  pickup
+  delivery
+}
+
+enum ChatStatus {
+  bot
+  live
+  closed
+}
+
+enum SenderType {
+  customer
+  bot
+  admin
+}
+
+// ─── Users & Roles ───
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique @db.VarChar(255)
+  passwordHash   String?   @map("password_hash") @db.VarChar(255)
+  name           String    @db.VarChar(255)
+  phone          String?   @db.VarChar(50)
+  address        String?   @db.Text
+  role           Role      @default(USER)
+  municipalityId Int?      @map("municipality_id")
+  barangayId     Int?      @map("barangay_id")
+  googleId       String?   @unique @map("google_id") @db.VarChar(255)
+  facebookId     String?   @unique @map("facebook_id") @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  municipality   AbraMunicipality? @relation(fields: [municipalityId], references: [id], onDelete: SetNull)
+  barangay       AbraBarangay?     @relation(fields: [barangayId], references: [id], onDelete: SetNull)
+  cartItems      CartItem[]
+  orders         Order[]
+  chatSessions   ChatSession[]
+
+  @@map("users")
+}
+
+// ─── Categories ───
+model Category {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(100)
+  slug                String                @unique @db.VarChar(100)
+  sortOrder           Int                   @default(0) @map("sort_order")
+  customizationConfig Json                  @default("{}") @map("customization_config")
+  createdAt           DateTime              @default(now()) @map("created_at")
+
+  // Relations
+  products            Product[]
+  options             CustomizationOption[]
+
+  @@map("categories")
+}
+
+// ─── Products ───
+model Product {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int?     @map("category_id")
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  basePrice   Decimal  @default(35.00) @map("base_price") @db.Decimal(10, 2)
+  price       Decimal  @default(35.00) @db.Decimal(10, 2)
+  sizeLabel   String   @default("500g") @map("size_label") @db.VarChar(50)
+  imageUrl    String?  @map("image_url") @db.Text
+  category    String?  @default("popcorn") @db.VarChar(100)
+  flavors     Json     @default("[]")
+  sizes       Json     @default("[]")
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  categoryRel Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+// ─── Customization Options ───
+model CustomizationOption {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int      @map("category_id")
+  groupName   String   @map("group_name") @db.VarChar(100)
+  name        String   @db.VarChar(100)
+  extraPrice  Decimal  @default(0.00) @map("extra_price") @db.Decimal(10, 2)
+  isAvailable Boolean  @default(true) @map("is_available")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("customization_options")
+}
+
+// ─── Persistent Account Carts ───
+model CartItem {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @map("user_id")
+  productId            Int      @map("product_id")
+  quantity             Int      @default(1)
+  customizationPayload Json     @default("{}") @map("customization_payload")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+// ─── Abra Municipalities & Barangays ───
+model AbraMunicipality {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique @db.VarChar(100)
+  deliveryFee Decimal        @default(50.00) @map("delivery_fee") @db.Decimal(10, 2)
+  isActive    Boolean        @default(true) @map("is_active")
+
+  // Relations
+  barangays   AbraBarangay[]
+  users       User[]
+  orders      Order[]
+
+  @@map("abra_municipalities")
+}
+
+model AbraBarangay {
+  id                Int              @id @default(autoincrement())
+  municipalityId    Int              @map("municipality_id")
+  name              String           @db.VarChar(100)
+  customDeliveryFee Decimal?         @map("custom_delivery_fee") @db.Decimal(10, 2)
+  isActive          Boolean          @default(true) @map("is_active")
+
+  // Relations
+  municipality      AbraMunicipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  users             User[]
+  orders            Order[]
+
+  @@map("abra_barangays")
+}
+
+// ─── Orders & Tracking ───
+model Order {
+  id                Int              @id @default(autoincrement())
+  userId            Int              @map("user_id")
+  status            OrderStatus      @default(pending)
+  subtotal          Decimal          @default(0.00) @db.Decimal(10, 2)
+  shippingFee       Decimal          @default(0.00) @map("shipping_fee") @db.Decimal(10, 2)
+  total             Decimal          @db.Decimal(10, 2)
+  deliveryMethod    DeliveryMethod   @map("delivery_method")
+  municipalityId    Int?             @map("municipality_id")
+  barangayId        Int?             @map("barangay_id")
+  deliveryAddress   String?          @map("delivery_address") @db.Text
+  deliveryNotes     String?          @map("delivery_notes") @db.Text
+  scheduledTime     DateTime?        @map("scheduled_time")
+  paymentMethod     String?          @map("payment_method") @db.VarChar(50)
+  paymentReceiptUrl String?          @map("payment_receipt_url") @db.Text
+  paymentConfirmed  Boolean          @default(false) @map("payment_confirmed")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user              User             @relation(fields: [userId], references: [id])
+  municipality      AbraMunicipality? @relation(fields: [municipalityId], references: [id], onDelete: SetNull)
+  barangay          AbraBarangay?    @relation(fields: [barangayId], references: [id], onDelete: SetNull)
+  items             OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                   Int      @id @default(autoincrement())
+  orderId              Int      @map("order_id")
+  productId            Int      @map("product_id")
+  quantity             Int
+  priceAtTime          Decimal  @map("price_at_time") @db.Decimal(10, 2)
+  customizationPayload Json     @default("{}") @map("customization_payload")
+  flavor               String?  @db.VarChar(100)
+  size                 String?  @db.VarChar(100)
+
+  // Relations
+  order                Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product              Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// ─── Real-Time Chat & Meta Inquiry Sessions ───
+model ChatSession {
+  id           Int           @id @default(autoincrement())
+  userId       Int?          @map("user_id")
+  customerName String?       @map("customer_name") @db.VarChar(255)
+  status       ChatStatus    @default(bot)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages     ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id         Int         @id @default(autoincrement())
+  sessionId  Int         @map("session_id")
+  senderType SenderType  @map("sender_type")
+  content    String      @db.Text
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  session    ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+// ─── Site Settings ───
+model SiteSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique @db.VarChar(100)
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
