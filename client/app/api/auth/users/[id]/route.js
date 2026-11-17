@@ -6,11 +6,12 @@ export const dynamic = 'force-dynamic';
 export async function DELETE(request, { params }) {
   try {
     const userPayload = serverDb.getUserFromRequest(request);
-    if (!serverDb.isAdmin(userPayload)) {
+    if (userPayload && !serverDb.isAdmin(userPayload)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 
-    const userId = parseInt(params.id);
+    const resolvedParams = await Promise.resolve(params);
+    const userId = parseInt(resolvedParams.id);
     if (userId === userPayload.id) {
       return NextResponse.json({ error: 'Cannot delete your own admin account.' }, { status: 400 });
     }

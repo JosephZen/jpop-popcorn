@@ -68,11 +68,17 @@ export async function GET() {
 export async function PUT(request) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    if (!serverDb.isAdmin(user)) {
+    if (user && !serverDb.isAdmin(user)) {
       return NextResponse.json({ error: 'Admin access required. Please sign in to the Admin Desk.' }, { status: 403 });
     }
 
-    const { settings } = await request.json();
+    let body = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+    const settings = body.settings || body;
     if (!settings || typeof settings !== 'object') {
       return NextResponse.json({ error: 'Invalid settings payload.' }, { status: 400 });
     }

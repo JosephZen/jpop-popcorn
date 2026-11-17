@@ -152,6 +152,22 @@ const ProductCard = ({ product }) => {
             alt={product.name}
             className="product-card__image"
             loading="lazy"
+            onError={(e) => {
+              const exts = ['.jpg', '.png', '.jpeg', '.webp'];
+              const name = (product.name || '').toLowerCase();
+              const baseKey = name.includes('1kg') ? 'popcorn-1kg' :
+                name.includes('500g') ? 'popcorn-500g' :
+                name.includes('16') ? 'donuts-16' :
+                name.includes('donut') ? 'donuts-8' : 'popcorn-500g';
+              const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+              const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${baseKey}${ext}`));
+              const nextExt = exts[currentExtIndex + 1];
+              if (nextExt) {
+                e.currentTarget.src = `/products/${baseKey}${nextExt}`;
+              } else {
+                e.currentTarget.src = '/jpop-logo.svg';
+              }
+            }}
           />
           <span className="product-card__badge">
             {isDonut ? 'Mini Donut' : 'Gourmet Popcorn'}

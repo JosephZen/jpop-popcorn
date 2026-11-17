@@ -610,11 +610,15 @@ export default function CheckoutPage() {
                           width: '100%',
                         }}>
                           <img
-                            src={activeQr.imageUrl ? formatImageUrl(activeQr.imageUrl) : `/qr/${form.paymentMethod || 'gcash'}.${form.paymentMethod === 'instapay' ? 'png' : 'jpg'}`}
+                            src={activeQr.imageUrl ? formatImageUrl(activeQr.imageUrl) : `/qr/${form.paymentMethod || 'gcash'}.png`}
                             onError={(e) => {
-                              const fallback = `/qr/${form.paymentMethod || 'gcash'}.${form.paymentMethod === 'instapay' ? 'png' : 'jpg'}`;
-                              if (!e.currentTarget.src.endsWith(fallback)) {
-                                e.currentTarget.src = fallback;
+                              const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+                              const method = (form.paymentMethod || 'gcash').toLowerCase();
+                              const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+                              const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${method}${ext}`));
+                              const nextExt = exts[currentExtIndex + 1];
+                              if (nextExt) {
+                                e.currentTarget.src = `/qr/${method}${nextExt}`;
                               }
                             }}
                             alt={`${activeQr.label} QR`}

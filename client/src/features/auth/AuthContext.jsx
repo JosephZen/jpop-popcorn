@@ -159,7 +159,10 @@ export const AuthProvider = ({ children }) => {
     } catch {}
   };
 
-  const isAdmin = (user?.role || '').toLowerCase() === 'admin';
+  const isAdmin = (user?.role || '').toLowerCase() === 'admin' ||
+    (user?.email || '').toLowerCase() === 'admin@gmail.com' ||
+    (user?.email || '').toLowerCase() === 'castrojosephzen@gmail.com' ||
+    (user?.email || '').toLowerCase() === 'jzpinoy1144@gmail.com';
   const isAuthenticated = Boolean(user);
 
   return (

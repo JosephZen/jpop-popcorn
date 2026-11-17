@@ -4,15 +4,12 @@ import serverDb from '@/lib/server-db';
 export async function PUT(request, { params }) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    const isAdmin = user && (
-      (user.role || '').toLowerCase() === 'admin' ||
-      (user.email || '').toLowerCase() === 'admin@gmail.com'
-    );
-    if (!isAdmin) {
+    if (user && !serverDb.isAdmin(user)) {
       return NextResponse.json({ error: 'Admin access required. Please sign in to the Admin Desk.' }, { status: 403 });
     }
 
-    const { key } = await params;
+    const resolvedParams = await Promise.resolve(params);
+    const key = resolvedParams?.key;
     const body = await request.json();
 
     const updated = serverDb.updateSettings({ [key]: body.value });

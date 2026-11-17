@@ -111,13 +111,13 @@ if (!globalStore) {
       sizeLabel: p.sizeLabel || (p.name.includes('1kg') ? '1kg' : '500g'),
       category: p.category || (p.name.includes('Donut') ? 'mini-donut' : 'popcorn'),
       categoryId: p.categoryId || (p.category === 'mini-donut' ? 2 : 1),
-      imageUrl: (p.imageUrl && p.imageUrl.includes('photo-1572177215152'))
-        ? 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80'
-        : (p.imageUrl && p.imageUrl.includes('photo-1585237432822'))
-        ? 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600&q=80'
-        : (p.imageUrl && p.imageUrl.includes('photo-1527515637462'))
-        ? 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&q=80'
-        : (p.imageUrl || (p.name.includes('Donut') ? 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=600&q=80' : 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80')),
+      imageUrl: p.imageUrl || (
+        p.name.includes('1kg') ? '/products/popcorn-1kg.jpg' :
+        p.name.includes('500g') ? '/products/popcorn-500g.jpg' :
+        p.name.includes('16') ? '/products/donuts-16.jpg' :
+        p.name.includes('Donut') ? '/products/donuts-8.jpg' :
+        '/products/popcorn-500g.jpg'
+      ),
       flavors: p.flavors || ['Spicy BBQ', 'Sour Cream & Onion', 'Cheese', 'BBQ'],
       sizes: p.sizes || [],
       isActive: p.isActive !== false,
@@ -201,14 +201,14 @@ const syncLoad = () => {
       const persisted = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
       if (Array.isArray(persisted.products)) {
         globalStore.products = persisted.products.map((p) => {
-          if (p.imageUrl && p.imageUrl.includes('photo-1572177215152')) {
-            return { ...p, imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80' };
-          }
-          if (p.imageUrl && p.imageUrl.includes('photo-1585237432822')) {
-            return { ...p, imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600&q=80' };
-          }
-          if (p.imageUrl && p.imageUrl.includes('photo-1527515637462')) {
-            return { ...p, imageUrl: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&q=80' };
+          if (!p.imageUrl || p.imageUrl.includes('unsplash.com')) {
+            return {
+              ...p,
+              imageUrl: p.name.includes('1kg') ? '/products/popcorn-1kg.jpg' :
+                p.name.includes('500g') ? '/products/popcorn-500g.jpg' :
+                p.name.includes('16') ? '/products/donuts-16.jpg' :
+                '/products/donuts-8.jpg'
+            };
           }
           return p;
         });

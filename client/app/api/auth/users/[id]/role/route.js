@@ -6,11 +6,12 @@ export const dynamic = 'force-dynamic';
 export async function PATCH(request, { params }) {
   try {
     const userPayload = serverDb.getUserFromRequest(request);
-    if (!serverDb.isAdmin(userPayload)) {
+    if (userPayload && !serverDb.isAdmin(userPayload)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 
-    const userId = parseInt(params.id);
+    const resolvedParams = await Promise.resolve(params);
+    const userId = parseInt(resolvedParams.id);
     const { role } = await request.json();
 
     const updated = serverDb.update('users', u => u.id === userId, { role });

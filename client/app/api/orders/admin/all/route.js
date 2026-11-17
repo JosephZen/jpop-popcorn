@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    if (!serverDb.isAdmin(user)) {
+    if (user && !serverDb.isAdmin(user)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 

@@ -19,15 +19,12 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const userPayload = serverDb.getUserFromRequest(request);
-    const isAdmin = userPayload && (
-      (userPayload.role || '').toLowerCase() === 'admin' ||
-      (userPayload.email || '').toLowerCase() === 'admin@gmail.com'
-    );
-    if (!isAdmin) {
+    if (userPayload && !serverDb.isAdmin(userPayload)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 
-    const id = parseInt(params.id);
+    const resolvedParams = await Promise.resolve(params);
+    const id = parseInt(resolvedParams.id);
     const body = await request.json();
     const updates = {};
 

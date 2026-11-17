@@ -120,8 +120,11 @@ export default function ProfilePage() {
         if (matchIndex === -1) {
           combined.push(lo);
         } else {
-          // Keep newer status or merged info
-          combined[matchIndex] = { ...lo, ...combined[matchIndex] };
+          // Keep newest status and merged info
+          const serverOrder = combined[matchIndex];
+          const serverTime = new Date(serverOrder.updatedAt || serverOrder.createdAt || 0).getTime();
+          const localTime = new Date(lo.updatedAt || lo.createdAt || 0).getTime();
+          combined[matchIndex] = localTime >= serverTime ? { ...serverOrder, ...lo } : { ...lo, ...serverOrder };
         }
       }
       combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

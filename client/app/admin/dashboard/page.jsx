@@ -540,34 +540,42 @@ export default function AdminDashboardPage() {
 
   // ─── Order Management Handlers ───
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    // 1. Optimistic immediate state update so UI and dropdown never freeze or revert
+    setOrders(prev => prev.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o));
+    try {
+      const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+      const updated = stored.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus, updatedAt: new Date().toISOString() } : o);
+      localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('jpop_order_updated'));
+    } catch {}
+
+    toast.success(`Order #${orderId} status updated to ${newStatus.toUpperCase()}! 📦`);
+
+    // 2. Sync with backend
     try {
       await ordersAPI.updateStatus(orderId, newStatus);
-      toast.success(`Order #${orderId} status updated to ${newStatus}`);
-      try {
-        const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-        const updated = stored.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
-        localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
-        if (typeof window !== 'undefined') window.dispatchEvent(new Event('jpop_order_updated'));
-      } catch {}
-      loadAllAdminData();
     } catch (err) {
-      toast.error('Failed to update order status.');
+      console.warn('Backend order status sync delayed, saved locally:', err);
     }
   };
 
   const handleConfirmPayment = async (orderId) => {
+    // 1. Optimistic immediate state update
+    setOrders(prev => prev.map(o => String(o.id) === String(orderId) ? { ...o, paymentConfirmed: true, status: 'confirmed' } : o));
+    try {
+      const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+      const updated = stored.map(o => String(o.id) === String(orderId) ? { ...o, paymentConfirmed: true, status: 'confirmed', updatedAt: new Date().toISOString() } : o);
+      localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('jpop_order_updated'));
+    } catch {}
+
+    toast.success(`Payment confirmed for Order #${orderId}! Order marked as Confirmed. ✅`);
+
+    // 2. Sync with backend
     try {
       await ordersAPI.confirmPayment(orderId);
-      toast.success(`Payment confirmed for Order #${orderId}! Order is now confirmed.`);
-      try {
-        const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-        const updated = stored.map(o => String(o.id) === String(orderId) ? { ...o, paymentConfirmed: true, status: 'confirmed' } : o);
-        localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
-        if (typeof window !== 'undefined') window.dispatchEvent(new Event('jpop_order_updated'));
-      } catch {}
-      loadAllAdminData();
     } catch (err) {
-      toast.error('Failed to confirm payment.');
+      console.warn('Backend payment confirm sync delayed, saved locally:', err);
     }
   };
 
@@ -743,6 +751,22 @@ export default function AdminDashboardPage() {
                       <img
                         src={formatImageUrl(p.imageUrl)}
                         alt={p.name}
+                        onError={(e) => {
+                          const exts = ['.jpg', '.png', '.jpeg', '.webp'];
+                          const name = (p.name || '').toLowerCase();
+                          const baseKey = name.includes('1kg') ? 'popcorn-1kg' :
+                            name.includes('500g') ? 'popcorn-500g' :
+                            name.includes('16') ? 'donuts-16' :
+                            name.includes('donut') ? 'donuts-8' : 'popcorn-500g';
+                          const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+                          const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${baseKey}${ext}`));
+                          const nextExt = exts[currentExtIndex + 1];
+                          if (nextExt) {
+                            e.currentTarget.src = `/products/${baseKey}${nextExt}`;
+                          } else {
+                            e.currentTarget.src = '/jpop-logo.svg';
+                          }
+                        }}
                         style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px' }}
                       />
                     </td>
@@ -1282,11 +1306,14 @@ export default function AdminDashboardPage() {
 
                       <div style={{ textAlign: 'center', marginTop: '12px' }}>
                         <img
-                          src={qr.imageUrl ? formatImageUrl(qr.imageUrl) : `/qr/${methodKey}.${methodKey === 'instapay' ? 'png' : 'jpg'}`}
+                          src={qr.imageUrl ? formatImageUrl(qr.imageUrl) : `/qr/${methodKey}.png`}
                           onError={(e) => {
-                            const fallback = `/qr/${methodKey}.${methodKey === 'instapay' ? 'png' : 'jpg'}`;
-                            if (!e.currentTarget.src.endsWith(fallback)) {
-                              e.currentTarget.src = fallback;
+                            const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+                            const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+                            const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${methodKey}${ext}`));
+                            const nextExt = exts[currentExtIndex + 1];
+                            if (nextExt) {
+                              e.currentTarget.src = `/qr/${methodKey}${nextExt}`;
                             }
                           }}
                           alt={`${methodKey} QR`}

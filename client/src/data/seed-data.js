@@ -49,7 +49,7 @@ export const seedData = {
       ],
       "isActive": true,
       "sortOrder": 1,
-      "imageUrl": "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80"
+      "imageUrl": "/products/popcorn-500g.jpg"
     },
     {
       "name": "J-Pop Gourmet Popcorn (1kg Party Bag)",
@@ -70,7 +70,7 @@ export const seedData = {
       ],
       "isActive": true,
       "sortOrder": 2,
-      "imageUrl": "https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600&q=80"
+      "imageUrl": "/products/popcorn-1kg.jpg"
     },
     {
       "name": "Mini Donuts (Box of 8)",
@@ -88,7 +88,7 @@ export const seedData = {
       ],
       "isActive": true,
       "sortOrder": 3,
-      "imageUrl": "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=600&q=80"
+      "imageUrl": "/products/donuts-8.jpg"
     },
     {
       "name": "Mini Donuts (Box of 16 Jumbo)",
@@ -106,7 +106,7 @@ export const seedData = {
       ],
       "isActive": true,
       "sortOrder": 4,
-      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&q=80"
+      "imageUrl": "/products/donuts-16.jpg"
     }
   ],
   "customizationOptions": [
