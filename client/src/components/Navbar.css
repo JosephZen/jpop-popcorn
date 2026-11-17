@@ -250,4 +250,106 @@
   .navbar__user-name {
     display: none;
   }
+
+  .navbar__cart-btn {
+    flex-shrink: 0;
+    display: flex !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar__inner {
+    gap: 8px;
+    height: 68px;
+  }
+
+  .navbar__actions {
+    gap: 6px;
+  }
+
+  .navbar__icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .navbar__desktop-logout {
+    display: none !important;
+  }
+
+  .navbar__user-btn {
+    padding: 6px 10px;
+  }
+
+  .navbar__brand-text {
+    font-size: 1.25rem;
+  }
+
+  .navbar__logo {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Floating Bottom Cart Bar for Mobile */
+.mobile-cart-bar {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .mobile-cart-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 16px;
+    right: 16px;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1A1514;
+    color: #F7F1E9;
+    padding: 14px 20px;
+    border-radius: 50px;
+    border: 2px solid #FFD32A;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    animation: slideUpCart 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-cart-bar__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #FFD32A;
+  }
+
+  .mobile-cart-bar__badge {
+    background: #FFD32A;
+    color: #1A1514;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 900;
+  }
+
+  .mobile-cart-bar__right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: #FFFFFF;
+  }
+
+  @keyframes slideUpCart {
+    from {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
 }

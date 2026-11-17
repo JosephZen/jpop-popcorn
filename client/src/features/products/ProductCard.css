@@ -130,6 +130,18 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 380px) {
+  .product-card__actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .product-card__qty-stepper {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 .product-card__qty-stepper {

@@ -153,18 +153,16 @@ const Navbar = ({ onCartClick }) => {
             {theme === 'dark' ? <FiSun size={18} /> : <FiMoon size={18} />}
           </button>
 
-          {/* Cart Button */}
-          {!isAdmin && (
-            <button
-              className="navbar__icon-btn"
-              onClick={onCartClick}
-              title="Shopping Cart"
-              aria-label="Open Cart"
-            >
-              <FiShoppingCart size={19} />
-              {itemCount > 0 && <span className="navbar__cart-badge">{itemCount}</span>}
-            </button>
-          )}
+          {/* Cart Button: Always visible for customers, visitors, and admins */}
+          <button
+            className="navbar__icon-btn navbar__cart-btn"
+            onClick={onCartClick}
+            title="Shopping Cart"
+            aria-label="Open Cart"
+          >
+            <FiShoppingCart size={19} />
+            {itemCount > 0 && <span className="navbar__cart-badge">{itemCount}</span>}
+          </button>
 
           {/* User Auth Menu */}
           {isUserLoggedIn ? (
@@ -186,7 +184,7 @@ const Navbar = ({ onCartClick }) => {
                 )}
               </Link>
               <button
-                className="navbar__icon-btn"
+                className="navbar__icon-btn navbar__desktop-logout"
                 onClick={handleLogout}
                 title="Logout"
                 aria-label="Logout"
@@ -196,7 +194,7 @@ const Navbar = ({ onCartClick }) => {
               </button>
             </div>
           ) : (
-            <Link href="/login" className="btn btn-primary btn-sm">
+            <Link href="/login" className="btn btn-primary btn-sm navbar__signin-btn">
               Sign In
             </Link>
           )}

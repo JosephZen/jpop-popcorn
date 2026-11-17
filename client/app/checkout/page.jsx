@@ -211,6 +211,9 @@ export default function CheckoutPage() {
 
       // 2. Submit order payload to backend
       const payload = {
+        customerName: user?.name || form.name || 'Customer',
+        customerEmail: user?.email || '',
+        customerPhone: form.phone || user?.phone || '',
         items: items.map((i) => ({
           productId: i.productId,
           productName: i.name,
@@ -232,12 +235,13 @@ export default function CheckoutPage() {
       const res = await ordersAPI.create(payload);
       const serverOrder = res.data?.order;
       const orderRecord = {
-        id: serverOrder?.id || Date.now(),
+        ...(serverOrder || {}),
+        id: serverOrder?.id || (Date.now() + Math.floor(Math.random() * 1000)),
         userId: user?.id || 1,
-        customerName: user?.name || 'Customer',
+        customerName: user?.name || form.name || 'Customer',
         customerEmail: user?.email || '',
-        customerPhone: user?.phone || '',
-        status: 'pending',
+        customerPhone: form.phone || user?.phone || '',
+        status: serverOrder?.status || 'pending',
         subtotal: serverOrder?.subtotal || getSubtotal().toFixed(2),
         shippingFee: serverOrder?.shippingFee || '0.00',
         total: serverOrder?.total || (getSubtotal() + (form.deliveryMethod === 'delivery' ? baseDeliveryFee : 0)).toFixed(2),
@@ -248,13 +252,14 @@ export default function CheckoutPage() {
         paymentMethod: payload.paymentMethod,
         paymentReceiptUrl: payload.paymentReceiptUrl,
         paymentConfirmed: false,
-        items: payload.items,
-        createdAt: new Date().toISOString(),
+        items: serverOrder?.items || payload.items,
+        createdAt: serverOrder?.createdAt || new Date().toISOString(),
       };
       try {
         const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-        stored.unshift(orderRecord);
-        localStorage.setItem('jpop_persisted_orders', JSON.stringify(stored));
+        const filtered = stored.filter(o => String(o.id) !== String(orderRecord.id));
+        filtered.unshift(orderRecord);
+        localStorage.setItem('jpop_persisted_orders', JSON.stringify(filtered));
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('jpop_order_updated'));
         }

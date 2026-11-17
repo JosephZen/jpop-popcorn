@@ -259,8 +259,16 @@ export const serverDb = {
   insert: (table, row) => {
     if (!globalStore[table]) globalStore[table] = [];
     const list = globalStore[table];
-    const nextId = list.length > 0 ? Math.max(...list.map(r => r.id || 0)) + 1 : 1;
-    const newRow = { id: nextId, createdAt: new Date().toISOString(), ...row };
+    let assignedId = row?.id;
+    if (!assignedId) {
+      if (table === 'orders') {
+        const maxId = list.reduce((max, r) => Math.max(max, parseInt(r.id) || 0), 0);
+        assignedId = maxId > 1000 ? maxId + 1 : Number(`${Date.now().toString().slice(-5)}${Math.floor(10 + Math.random() * 90)}`);
+      } else {
+        assignedId = list.length > 0 ? Math.max(...list.map(r => r.id || 0)) + 1 : 1;
+      }
+    }
+    const newRow = { ...row, id: assignedId, createdAt: row?.createdAt || new Date().toISOString() };
     list.push(newRow);
     syncSave();
     return newRow;

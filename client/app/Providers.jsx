@@ -20,6 +20,8 @@ export default function Providers({ children }) {
   const [cartOpen, setCartOpen] = useState(false);
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+  const itemCount = useCartStore((s) => s.getItemCount());
+  const subtotal = useCartStore((s) => s.getSubtotal());
 
   // Hydrate cart from localStorage on client side mount
   useEffect(() => {
@@ -48,6 +50,21 @@ export default function Providers({ children }) {
 
           {!isAdmin && <ChatWidget />}
           {!isAdmin && <Footer />}
+
+          {/* Persistent Floating Bottom Cart Basket on Mobile */}
+          {!isAdmin && itemCount > 0 && !pathname?.startsWith('/checkout') && (
+            <div className="mobile-cart-bar" onClick={() => setCartOpen(true)} role="button" aria-label="Open Cart">
+              <div className="mobile-cart-bar__left">
+                <span>🛒 Basket</span>
+                <span className="mobile-cart-bar__badge">{itemCount}</span>
+                <span>₱{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="mobile-cart-bar__right">
+                <span>View Order</span>
+                <span>➜</span>
+              </div>
+            </div>
+          )}
 
           <Toaster
             position="bottom-center"

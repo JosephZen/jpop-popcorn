@@ -176,8 +176,14 @@ export default function AdminDashboardPage() {
           const localOrders = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
           const combined = [...serverOrders];
           for (const lo of localOrders) {
-            if (!combined.some(o => o.id === lo.id)) {
+            const matchIndex = combined.findIndex(o => String(o.id) === String(lo.id));
+            if (matchIndex === -1) {
               combined.push(lo);
+            } else {
+              const s = combined[matchIndex];
+              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+              const lTime = new Date(lo.updatedAt || lo.createdAt || 0).getTime();
+              combined[matchIndex] = lTime >= sTime ? { ...s, ...lo } : { ...lo, ...s };
             }
           }
           combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -238,6 +244,16 @@ export default function AdminDashboardPage() {
           }
         } catch {}
       });
+  };
+
+  // ─── Privacy Masking Helper ───
+  const maskEmail = (email) => {
+    if (!email || typeof email !== 'string') return '';
+    const parts = email.split('@');
+    if (parts.length !== 2) return email;
+    const [user, domain] = parts;
+    if (user.length <= 2) return `${user[0]}***@${domain}`;
+    return `${user.slice(0, 2)}****${user.slice(-1)}@${domain}`;
   };
 
   // ─── Image Compression Helper (Keeps QR & Product Images Sharp & Lightweight) ───
@@ -1020,7 +1036,10 @@ export default function AdminDashboardPage() {
                     <td><strong>#{order.id}</strong></td>
                     <td>
                       <div><strong>{order.customerName}</strong></div>
-                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>{order.customerPhone || order.customerEmail}</div>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                        {order.customerPhone ? `${order.customerPhone} • ` : ''}
+                        {maskEmail(order.customerEmail)}
+                      </div>
                     </td>
                     <td>
                       <div style={{ fontSize: '0.82rem' }}>

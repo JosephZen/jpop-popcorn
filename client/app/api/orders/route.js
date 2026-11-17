@@ -147,9 +147,9 @@ export async function POST(request) {
 
     const order = serverDb.insert('orders', {
       userId,
-      customerName: user?.name || 'Customer',
-      customerEmail: user?.email || '',
-      customerPhone: user?.phone || '',
+      customerName: body.customerName || user?.name || 'Customer',
+      customerEmail: (body.customerEmail || user?.email || '').toLowerCase().trim(),
+      customerPhone: body.customerPhone || user?.phone || '',
       status: 'pending',
       subtotal: calculatedSubtotal.toFixed(2),
       shippingFee: shippingFee.toFixed(2),
