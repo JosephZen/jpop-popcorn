@@ -695,15 +695,19 @@ export default function CheckoutPage() {
                           width: '100%',
                         }}>
                           <img
-                            src={activeQr.imageUrl ? formatImageUrl(activeQr.imageUrl) : `/qr/${form.paymentMethod || 'gcash'}.png`}
+                            src={activeQr.imageUrl ? formatImageUrl(activeQr.imageUrl) : `/qr/${form.paymentMethod || 'gcash'}.jpg`}
                             onError={(e) => {
-                              const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+                              const target = e.currentTarget;
+                              const exts = ['.jpg', '.png', '.jpeg'];
                               const method = (form.paymentMethod || 'gcash').toLowerCase();
-                              const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+                              const currentSrc = target.getAttribute('src') || target.src || '';
                               const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${method}${ext}`));
                               const nextExt = exts[currentExtIndex + 1];
                               if (nextExt) {
-                                e.currentTarget.src = `/qr/${method}${nextExt}`;
+                                target.src = `/qr/${method}${nextExt}?v=3`;
+                              } else {
+                                target.onerror = null;
+                                target.src = `/qr/${method}.jpg?v=3`;
                               }
                             }}
                             alt={`${activeQr.label} QR`}

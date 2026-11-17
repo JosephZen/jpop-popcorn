@@ -817,19 +817,21 @@ export default function AdminDashboardPage() {
                         src={formatImageUrl(p.imageUrl)}
                         alt={p.name}
                         onError={(e) => {
-                          const exts = ['.jpg', '.png', '.jpeg', '.webp'];
+                          const target = e.currentTarget;
+                          const exts = ['.jpg', '.png', '.jpeg'];
                           const name = (p.name || '').toLowerCase();
                           const baseKey = name.includes('1kg') ? 'popcorn-1kg' :
                             name.includes('500g') ? 'popcorn-500g' :
                             name.includes('16') ? 'donuts-16' :
                             name.includes('donut') ? 'donuts-8' : 'popcorn-500g';
-                          const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+                          const currentSrc = target.getAttribute('src') || target.src || '';
                           const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${baseKey}${ext}`));
                           const nextExt = exts[currentExtIndex + 1];
                           if (nextExt) {
-                            e.currentTarget.src = `/products/${baseKey}${nextExt}`;
+                            target.src = `/products/${baseKey}${nextExt}?v=3`;
                           } else {
-                            e.currentTarget.src = '/jpop-logo.svg';
+                            target.onerror = null;
+                            target.src = `/products/${baseKey}.jpg?v=3`;
                           }
                         }}
                         style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px' }}
@@ -1392,14 +1394,18 @@ export default function AdminDashboardPage() {
 
                       <div style={{ textAlign: 'center', marginTop: '12px' }}>
                         <img
-                          src={qr.imageUrl ? formatImageUrl(qr.imageUrl) : `/qr/${methodKey}.png`}
+                          src={qr.imageUrl ? formatImageUrl(qr.imageUrl) : `/qr/${methodKey}.jpg`}
                           onError={(e) => {
-                            const exts = ['.png', '.jpg', '.jpeg', '.webp'];
-                            const currentSrc = e.currentTarget.getAttribute('src') || e.currentTarget.src || '';
+                            const target = e.currentTarget;
+                            const exts = ['.jpg', '.png', '.jpeg'];
+                            const currentSrc = target.getAttribute('src') || target.src || '';
                             const currentExtIndex = exts.findIndex(ext => currentSrc.toLowerCase().includes(`${methodKey}${ext}`));
                             const nextExt = exts[currentExtIndex + 1];
                             if (nextExt) {
-                              e.currentTarget.src = `/qr/${methodKey}${nextExt}`;
+                              target.src = `/qr/${methodKey}${nextExt}?v=3`;
+                            } else {
+                              target.onerror = null;
+                              target.src = `/qr/${methodKey}.jpg?v=3`;
                             }
                           }}
                           alt={`${methodKey} QR`}
