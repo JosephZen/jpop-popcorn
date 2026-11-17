@@ -244,6 +244,61 @@ export const serverDb = {
     return beforeLen > globalStore[table].length;
   },
 
+  // ─── Settings Helpers ───
+  getSettings: () => {
+    syncLoad();
+    const base = seedData.settings || {};
+    const stored = globalStore.settings || {};
+    return {
+      ...base,
+      ...stored,
+      qr_codes: {
+        ...(base.qr_codes || {}),
+        ...(stored.qr_codes || {}),
+      },
+      oauth: {
+        ...(base.oauth || {}),
+        ...(stored.oauth || {}),
+      },
+      site_customization: {
+        ...(base.site_customization || {}),
+        ...(stored.site_customization || {}),
+      },
+      facebook_messenger: {
+        ...(base.facebook_messenger || {}),
+        ...(stored.facebook_messenger || {}),
+      },
+    };
+  },
+
+  updateSettings: (updates = {}) => {
+    syncLoad();
+    const current = serverDb.getSettings();
+    globalStore.settings = {
+      ...current,
+      ...updates,
+      qr_codes: {
+        ...(current.qr_codes || {}),
+        ...(updates.qr_codes || {}),
+      },
+      oauth: {
+        ...(current.oauth || {}),
+        ...(updates.oauth || {}),
+      },
+      site_customization: {
+        ...(current.site_customization || {}),
+        ...(updates.site_customization || {}),
+      },
+      facebook_messenger: {
+        ...(current.facebook_messenger || {}),
+        ...(updates.facebook_messenger || {}),
+      },
+      faq: updates.faq || current.faq || [],
+    };
+    syncSave();
+    return globalStore.settings;
+  },
+
   // ─── Auth / JWT Helpers ───
   signToken: (user) => {
     return jwt.sign(

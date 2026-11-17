@@ -37,9 +37,17 @@ function LoginForm() {
     }
 
     if (error) {
-      if (error === 'google_auth_failed') toast.error('Google Sign-In was cancelled or failed.');
-      else if (error === 'facebook_auth_failed') toast.error('Facebook Sign-In was cancelled or failed.');
-      else toast.error('Social login error. Please try email login.');
+      if (error === 'missing_google_keys') {
+        toast.error('Real Google Login requires your Google Client ID. Add it in Admin Dashboard -> Settings -> Social Auth.', { duration: 5000 });
+      } else if (error === 'missing_facebook_keys') {
+        toast.error('Real Facebook Login requires your Facebook App ID. Add it in Admin Dashboard -> Settings -> Social Auth.', { duration: 5000 });
+      } else if (error === 'google_auth_failed') {
+        toast.error('Google Sign-In was cancelled or failed.');
+      } else if (error === 'facebook_auth_failed') {
+        toast.error('Facebook Sign-In was cancelled or failed.');
+      } else {
+        toast.error('Social login error. Please check your credentials or use email login.');
+      }
     }
   }, [searchParams]);
 

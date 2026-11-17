@@ -239,9 +239,9 @@ export const seedData = {
       },
       "instapay": {
         "label": "InstaPay",
-        "accountName": "Joseph Zen Castro (BDO/BPI)",
-        "accountNumber": "1234-5678-9012",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:123456789012;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "accountName": "Joseph Zen Castro (Maribank)",
+        "accountNumber": "10555184277",
+        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:10555184277;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
       }
     },
     "faq": [

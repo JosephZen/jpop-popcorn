@@ -120,6 +120,12 @@ export default function AdminDashboardPage() {
       url: 'https://m.me/2725998090803875',
       label: 'Chat with Team on Messenger',
     },
+    oauth: {
+      google_client_id: '',
+      google_client_secret: '',
+      facebook_app_id: '',
+      facebook_app_secret: '',
+    },
     faq: [],
   });
 
@@ -170,10 +176,45 @@ export default function AdminDashboardPage() {
             url: 'https://m.me/2725998090803875',
             label: 'Chat with Team on Messenger',
           },
+          oauth: s.oauth || {
+            google_client_id: '',
+            google_client_secret: '',
+            facebook_app_id: '',
+            facebook_app_secret: '',
+          },
           faq: Array.isArray(s.faq) ? s.faq : [],
         });
       })
       .catch(() => {});
+  };
+
+  // ─── Image Compression Helper (Keeps QR & Product Images Sharp & Lightweight) ───
+  const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.85) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
   };
 
   // ─── Product Handlers ───
@@ -213,17 +254,21 @@ export default function AdminDashboardPage() {
     setShowProductModal(true);
   };
 
-  const handleProductImageUpload = (e) => {
+  const handleProductImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const dataUrl = uploadEvent.target.result;
+    try {
+      const dataUrl = await compressImage(file, 800, 800, 0.85);
+      if (!dataUrl) {
+        toast.error('Failed to process image.');
+        return;
+      }
       setProductForm((prev) => ({ ...prev, imageUrl: dataUrl }));
       toast.success('Product image updated! Click "Save Product" to apply.');
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      toast.error('Failed to process image.');
+    }
   };
 
   const handleAddFlavorTag = (e) => {
@@ -473,36 +518,42 @@ export default function AdminDashboardPage() {
   };
 
   // ─── Settings / QR Codes Handlers ───
-  const handleQrImageUpload = (paymentKey, e) => {
+  const handleQrImageUpload = async (paymentKey, e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const dataUrl = uploadEvent.target.result;
+    try {
+      const dataUrl = await compressImage(file, 800, 800, 0.85);
+      if (!dataUrl) {
+        toast.error('Failed to process image file.');
+        return;
+      }
       setSettingsForm((prev) => ({
         ...prev,
         qr_codes: {
           ...prev.qr_codes,
           [paymentKey]: {
-            ...prev.qr_codes[paymentKey],
+            ...(prev.qr_codes ? prev.qr_codes[paymentKey] : {}),
             imageUrl: dataUrl,
           },
         },
       }));
-      toast.success(`${paymentKey.toUpperCase()} QR image updated! Click "Save Settings" to apply.`);
-    };
-    reader.readAsDataURL(file);
+      toast.success(`${paymentKey.toUpperCase()} QR image loaded! Click "Save Settings" to apply.`);
+    } catch {
+      toast.error('Failed to process QR image.');
+    }
   };
 
   const handleSaveAllSettings = async () => {
     setSavingSettings(true);
     try {
-      await settingsAPI.bulkUpdate(settingsForm);
-      toast.success('All site customizations and QR codes saved and applied! 🚀');
+      const res = await settingsAPI.bulkUpdate(settingsForm);
+      toast.success(res.data?.message || 'All site customizations and QR codes saved and applied! 🚀');
       loadAllAdminData();
     } catch (err) {
-      toast.error('Failed to save settings.');
+      console.error('Settings save error:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Failed to save settings.';
+      toast.error(`Save failed: ${errMsg}`);
     } finally {
       setSavingSettings(false);
     }
@@ -1179,6 +1230,107 @@ export default function AdminDashboardPage() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* ─── REAL SOCIAL LOGIN (GOOGLE & FACEBOOK OAUTH) ─── */}
+              <div style={{ marginTop: '36px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+                <h4 style={{ marginBottom: '6px', color: '#FFD32A', fontSize: '1.2rem', fontWeight: 800 }}>
+                  🔑 Real Google &amp; Facebook Login Configuration
+                </h4>
+                <p className="text-muted" style={{ fontSize: '0.86rem', marginBottom: '20px' }}>
+                  Configure your real credentials here so customers can sign in using their actual personal Google and Facebook accounts.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+                  {/* Google OAuth */}
+                  <div style={{ padding: '20px', background: 'var(--bg-subtle)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+                    <h5 style={{ margin: '0 0 14px', color: '#4285F4', fontSize: '1.05rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Google Sign-In (Google Cloud)
+                    </h5>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label" style={{ fontSize: '0.82rem' }}>Google Client ID</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={settingsForm.oauth?.google_client_id || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          oauth: { ...settingsForm.oauth, google_client_id: e.target.value }
+                        })}
+                        placeholder="e.g. 123456789-xxx.apps.googleusercontent.com"
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label" style={{ fontSize: '0.82rem' }}>Google Client Secret</label>
+                      <input
+                        type="password"
+                        className="form-input"
+                        value={settingsForm.oauth?.google_client_secret || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          oauth: { ...settingsForm.oauth, google_client_secret: e.target.value }
+                        })}
+                        placeholder="GOCSPX-xxxxxxxxxxxxxx"
+                      />
+                    </div>
+                    <div style={{ padding: '10px', background: 'rgba(66, 133, 244, 0.08)', borderRadius: '8px', border: '1px solid rgba(66, 133, 244, 0.2)' }}>
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', display: 'block', lineHeight: 1.4 }}>
+                        <strong>Authorized Redirect URI in Google Cloud Console:</strong><br />
+                        <code style={{ color: '#FFD32A' }}>https://castrojosephzen.shop/api/auth/google/callback</code>
+                      </small>
+                    </div>
+                  </div>
+
+                  {/* Facebook OAuth */}
+                  <div style={{ padding: '20px', background: 'var(--bg-subtle)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+                    <h5 style={{ margin: '0 0 14px', color: '#1877F2', fontSize: '1.05rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Facebook Login (Meta Developer)
+                    </h5>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label" style={{ fontSize: '0.82rem' }}>Facebook App ID</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={settingsForm.oauth?.facebook_app_id || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          oauth: { ...settingsForm.oauth, facebook_app_id: e.target.value }
+                        })}
+                        placeholder="From developers.facebook.com -> J-Pop Corner -> App settings"
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label" style={{ fontSize: '0.82rem' }}>Facebook App Secret</label>
+                      <input
+                        type="password"
+                        className="form-input"
+                        value={settingsForm.oauth?.facebook_app_secret || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          oauth: { ...settingsForm.oauth, facebook_app_secret: e.target.value }
+                        })}
+                        placeholder="From developers.facebook.com -> App settings -> Basic"
+                      />
+                    </div>
+                    <div style={{ padding: '10px', background: 'rgba(24, 119, 242, 0.08)', borderRadius: '8px', border: '1px solid rgba(24, 119, 242, 0.2)' }}>
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', display: 'block', lineHeight: 1.4 }}>
+                        <strong>Valid OAuth Redirect URI in Meta Developer Dashboard:</strong><br />
+                        <code style={{ color: '#FFD32A' }}>https://castrojosephzen.shop/api/auth/facebook/callback</code>
+                      </small>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '28px', textAlign: 'right' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveAllSettings}
+                    disabled={savingSettings}
+                    style={{ padding: '12px 28px', fontSize: '1rem', fontWeight: 700 }}
+                  >
+                    <FiSave /> {savingSettings ? 'Saving All Settings...' : 'Save All Settings & QR Codes'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

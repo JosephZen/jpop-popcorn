@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import serverDb from '@/lib/server-db';
 import seedData from '@/data/seed-data.js';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_SETTINGS = seedData.settings || {
   qr_codes: {
     gcash: {
@@ -18,9 +20,9 @@ const DEFAULT_SETTINGS = seedData.settings || {
     },
     instapay: {
       label: 'InstaPay',
-      accountName: 'Joseph Zen Castro (BDO/BPI)',
-      accountNumber: '1234-5678-9012',
-      imageUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:123456789012;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER',
+      accountName: 'Joseph Zen Castro (Maribank)',
+      accountNumber: '10555184277',
+      imageUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:10555184277;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER',
     },
   },
   faq: [
@@ -55,9 +57,8 @@ const DEFAULT_SETTINGS = seedData.settings || {
 
 export async function GET() {
   try {
-    const saved = serverDb.findOne('site_settings', () => true);
-    const settingsMap = { ...DEFAULT_SETTINGS, ...(saved || {}) };
-    return NextResponse.json({ settings: settingsMap });
+    const settings = serverDb.getSettings();
+    return NextResponse.json({ settings });
   } catch (error) {
     console.error('Fetch settings API error:', error);
     return NextResponse.json({ settings: DEFAULT_SETTINGS });
@@ -67,8 +68,12 @@ export async function GET() {
 export async function PUT(request) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
+    const isAdmin = user && (
+      (user.role || '').toLowerCase() === 'admin' ||
+      (user.email || '').toLowerCase() === 'admin@gmail.com'
+    );
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required. Please sign in to the Admin Desk.' }, { status: 403 });
     }
 
     const { settings } = await request.json();
@@ -76,16 +81,13 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Invalid settings payload.' }, { status: 400 });
     }
 
-    let existing = serverDb.findOne('site_settings', () => true);
-    if (existing) {
-      serverDb.update('site_settings', () => true, settings);
-    } else {
-      serverDb.insert('site_settings', settings);
-    }
-
-    return NextResponse.json({ message: 'All site customizations and settings have been saved and applied!' });
+    const updated = serverDb.updateSettings(settings);
+    return NextResponse.json({
+      message: 'All site customizations and settings have been saved and applied!',
+      settings: updated,
+    });
   } catch (error) {
     console.error('Bulk update settings API error:', error);
-    return NextResponse.json({ error: 'Failed to save settings.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save settings: ' + (error.message || 'Server error') }, { status: 500 });
   }
 }

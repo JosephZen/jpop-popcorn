@@ -1,10 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../features/auth/AuthContext';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 
 export const GoogleIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 48 48">
@@ -22,47 +18,12 @@ export const FacebookIcon = ({ size = 18 }) => (
 );
 
 export default function SocialAuthButtons({ redirectPath = '/' }) {
-  const { loginWithToken } = useAuth();
-  const router = useRouter();
-  const [fastLoading, setFastLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState(null);
 
-  const handleSocialClick = async (provider) => {
-    // If the browser can navigate directly to the OAuth route
-    // /api/auth/google or /api/auth/facebook
-    // It will check for client ID. If none, it falls back to instant fast-track login.
-    setFastLoading(true);
-    try {
-      // Test if direct route exists or fast-track instant sign in
-      const defaultEmail = provider === 'google' ? 'google.user@gmail.com' : 'facebook.user@fb.me';
-      const defaultName = provider === 'google' ? 'Google Customer' : 'Facebook Customer';
-
-      // Ask user or try OAuth endpoint
-      const checkOAuth = await fetch(`/api/auth/${provider}`, { method: 'HEAD', redirect: 'manual' }).catch(() => null);
-
-      if (checkOAuth && checkOAuth.status === 307 || checkOAuth?.status === 302) {
-        window.location.href = `/api/auth/${provider}`;
-        return;
-      }
-
-      // Fast-track seamless sign-in
-      const res = await axios.post('/api/auth/social', {
-        provider,
-        email: defaultEmail,
-        name: defaultName,
-        providerId: `${provider}_${Date.now()}`,
-      });
-
-      if (res.data?.token) {
-        await loginWithToken(res.data.token);
-        toast.success(`Signed in with ${provider === 'google' ? 'Google' : 'Facebook'}! 🍿`);
-        router.push(redirectPath);
-      }
-    } catch (err) {
-      // Fallback redirect directly
-      window.location.href = `/api/auth/${provider}`;
-    } finally {
-      setFastLoading(false);
-    }
+  const handleSocialClick = (provider) => {
+    setLoadingProvider(provider);
+    // Directly launch real Google / Facebook OAuth flow
+    window.location.href = `/api/auth/${provider}?redirect=${encodeURIComponent(redirectPath)}`;
   };
 
   return (
@@ -71,7 +32,7 @@ export default function SocialAuthButtons({ redirectPath = '/' }) {
         <button
           type="button"
           onClick={() => handleSocialClick('google')}
-          disabled={fastLoading}
+          disabled={loadingProvider !== null}
           className="btn-social btn-social--google"
           style={{
             display: 'flex',
@@ -92,13 +53,13 @@ export default function SocialAuthButtons({ redirectPath = '/' }) {
           }}
         >
           <GoogleIcon size={18} />
-          <span>Continue with Google</span>
+          <span>{loadingProvider === 'google' ? 'Redirecting to Google...' : 'Continue with Google'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => handleSocialClick('facebook')}
-          disabled={fastLoading}
+          disabled={loadingProvider !== null}
           className="btn-social btn-social--facebook"
           style={{
             display: 'flex',
@@ -119,7 +80,7 @@ export default function SocialAuthButtons({ redirectPath = '/' }) {
           }}
         >
           <FacebookIcon size={18} />
-          <span>Continue with Facebook</span>
+          <span>{loadingProvider === 'facebook' ? 'Redirecting to Facebook...' : 'Continue with Facebook'}</span>
         </button>
       </div>
 

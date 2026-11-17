@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
+import serverDb from '@/lib/server-db';
 
 export async function GET(request) {
   const host = request.headers.get('host') || 'castrojosephzen.shop';
   const protocol = host.includes('localhost') ? 'http' : 'https';
   const callbackUrl = `${protocol}://${host}/api/auth/google/callback`;
+  const { searchParams } = new URL(request.url);
+  const redirect = searchParams.get('redirect') || '/';
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const settings = serverDb.getSettings();
+  const oauth = settings.oauth || {};
+  const clientId = process.env.GOOGLE_CLIENT_ID || oauth.google_client_id;
 
   if (!clientId) {
-    // Graceful fallback to instant fast-track social login on login page
-    return NextResponse.redirect(`${protocol}://${host}/login?fastSocial=google`);
+    return NextResponse.redirect(`${protocol}://${host}/login?error=missing_google_keys`);
   }
 
   const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -20,6 +24,7 @@ export async function GET(request) {
       scope: 'openid profile email',
       access_type: 'offline',
       prompt: 'consent',
+      state: redirect,
     }).toString();
 
   return NextResponse.redirect(googleAuthUrl);

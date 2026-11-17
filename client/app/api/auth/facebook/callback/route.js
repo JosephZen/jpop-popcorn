@@ -7,17 +7,20 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state') || '/';
 
   if (error || !code) {
     return NextResponse.redirect(`${protocol}://${host}/login?error=facebook_auth_failed`);
   }
 
-  const appId = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
-  const appSecret = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
+  const settings = serverDb.getSettings();
+  const oauth = settings.oauth || {};
+  const appId = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID || oauth.facebook_app_id;
+  const appSecret = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET || oauth.facebook_app_secret;
   const callbackUrl = `${protocol}://${host}/api/auth/facebook/callback`;
 
   try {
-    // 1. Exchange code for access token
+    // 1. Exchange code for access token with Meta Graph API
     const tokenUrl = `https://graph.facebook.com/v19.0/oauth/access_token?` +
       new URLSearchParams({
         client_id: appId,
@@ -30,6 +33,7 @@ export async function GET(request) {
     const tokenData = await tokenRes.json();
 
     if (!tokenData.access_token) {
+      console.error('Facebook token exchange failed:', tokenData);
       return NextResponse.redirect(`${protocol}://${host}/login?error=facebook_token_failed`);
     }
 
@@ -64,7 +68,7 @@ export async function GET(request) {
     }
 
     const token = serverDb.signToken(user);
-    return NextResponse.redirect(`${protocol}://${host}/login?token=${token}&social=facebook`);
+    return NextResponse.redirect(`${protocol}://${host}/login?token=${token}&social=facebook&redirect=${encodeURIComponent(state)}`);
   } catch (err) {
     console.error('Facebook OAuth callback error:', err);
     return NextResponse.redirect(`${protocol}://${host}/login?error=oauth_exception`);

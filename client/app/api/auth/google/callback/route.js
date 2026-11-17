@@ -7,17 +7,20 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state') || '/';
 
   if (error || !code) {
     return NextResponse.redirect(`${protocol}://${host}/login?error=google_auth_failed`);
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const settings = serverDb.getSettings();
+  const oauth = settings.oauth || {};
+  const clientId = process.env.GOOGLE_CLIENT_ID || oauth.google_client_id;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || oauth.google_client_secret;
   const callbackUrl = `${protocol}://${host}/api/auth/google/callback`;
 
   try {
-    // 1. Exchange code for access token
+    // 1. Exchange code for access token with Google
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -32,6 +35,7 @@ export async function GET(request) {
 
     const tokenData = await tokenRes.json();
     if (!tokenData.access_token) {
+      console.error('Google token exchange failed:', tokenData);
       return NextResponse.redirect(`${protocol}://${host}/login?error=token_exchange_failed`);
     }
 
@@ -71,7 +75,7 @@ export async function GET(request) {
     }
 
     const token = serverDb.signToken(user);
-    return NextResponse.redirect(`${protocol}://${host}/login?token=${token}&social=google`);
+    return NextResponse.redirect(`${protocol}://${host}/login?token=${token}&social=google&redirect=${encodeURIComponent(state)}`);
   } catch (err) {
     console.error('Google OAuth callback error:', err);
     return NextResponse.redirect(`${protocol}://${host}/login?error=oauth_exception`);

@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import useCartStore from '../../src/store/cartStore';
-import { ordersAPI, uploadAPI, settingsAPI, locationsAPI } from '../../src/services/api';
+import { ordersAPI, uploadAPI, settingsAPI, locationsAPI, formatImageUrl } from '../../src/services/api';
 import toast from 'react-hot-toast';
 import '../../src/pages/CheckoutPage.css';
 
@@ -570,9 +570,9 @@ export default function CheckoutPage() {
                           marginBottom: '16px',
                         }}>
                           <img
-                            src={activeQr.imageUrl}
+                            src={formatImageUrl(activeQr.imageUrl)}
                             alt={`${activeQr.label} QR`}
-                            style={{ width: '210px', height: '210px', display: 'block', borderRadius: '8px' }}
+                            style={{ width: '210px', height: '210px', display: 'block', borderRadius: '8px', objectFit: 'contain' }}
                           />
                         </div>
 
