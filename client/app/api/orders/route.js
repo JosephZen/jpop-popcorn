@@ -59,8 +59,11 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
-    const userOrders = serverDb.find('orders', o => o.userId === user.id)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const normalizedUserEmail = (user.email || '').toLowerCase().trim();
+    const userOrders = serverDb.find('orders', o => (
+      o.userId === user.id ||
+      (o.customerEmail && o.customerEmail.toLowerCase().trim() === normalizedUserEmail)
+    )).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const allProducts = serverDb.find('products');
     const ordersWithItems = userOrders.map(order => {
@@ -144,6 +147,9 @@ export async function POST(request) {
 
     const order = serverDb.insert('orders', {
       userId,
+      customerName: user?.name || 'Customer',
+      customerEmail: user?.email || '',
+      customerPhone: user?.phone || '',
       status: 'pending',
       subtotal: calculatedSubtotal.toFixed(2),
       shippingFee: shippingFee.toFixed(2),

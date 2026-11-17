@@ -11,7 +11,6 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params;
-    const orderId = parseInt(id);
     const { status } = await request.json();
 
     const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'];
@@ -19,7 +18,7 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }, { status: 400 });
     }
 
-    const updated = serverDb.update('orders', o => o.id === orderId, { status });
+    const updated = serverDb.update('orders', o => String(o.id) === String(id), { status });
     if (!updated) {
       return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
     }

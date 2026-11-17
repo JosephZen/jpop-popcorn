@@ -255,6 +255,9 @@ export default function CheckoutPage() {
         const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
         stored.unshift(orderRecord);
         localStorage.setItem('jpop_persisted_orders', JSON.stringify(stored));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('jpop_order_updated'));
+        }
       } catch {}
 
       clearCart();
@@ -607,7 +610,13 @@ export default function CheckoutPage() {
                           width: '100%',
                         }}>
                           <img
-                            src={formatImageUrl(activeQr.imageUrl)}
+                            src={activeQr.imageUrl ? formatImageUrl(activeQr.imageUrl) : `/qr/${form.paymentMethod || 'gcash'}.${form.paymentMethod === 'instapay' ? 'png' : 'jpg'}`}
+                            onError={(e) => {
+                              const fallback = `/qr/${form.paymentMethod || 'gcash'}.${form.paymentMethod === 'instapay' ? 'png' : 'jpg'}`;
+                              if (!e.currentTarget.src.endsWith(fallback)) {
+                                e.currentTarget.src = fallback;
+                              }
+                            }}
                             alt={`${activeQr.label} QR`}
                             style={{ width: '100%', height: 'auto', maxHeight: '420px', display: 'block', borderRadius: '10px', objectFit: 'contain', margin: '0 auto' }}
                           />

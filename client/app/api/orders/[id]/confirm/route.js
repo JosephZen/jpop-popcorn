@@ -11,9 +11,8 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params;
-    const orderId = parseInt(id);
 
-    const updated = serverDb.update('orders', o => o.id === orderId, {
+    const updated = serverDb.update('orders', o => String(o.id) === String(id), {
       paymentConfirmed: true,
       status: 'confirmed',
     });

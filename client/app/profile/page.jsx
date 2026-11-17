@@ -1,12 +1,83 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiPackage, FiSave, FiMapPin, FiPhone, FiMail, FiExternalLink, FiClock, FiLogOut } from 'react-icons/fi';
+import { FiUser, FiPackage, FiSave, FiMapPin, FiPhone, FiMail, FiExternalLink, FiClock, FiLogOut, FiCheck, FiRefreshCw, FiX } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
-import { ordersAPI, authAPI } from '../../src/services/api';
+import { ordersAPI, authAPI, formatImageUrl } from '../../src/services/api';
 import toast from 'react-hot-toast';
 import '../../src/pages/ProfilePage.css';
+
+const STATUS_STAGES = [
+  { key: 'pending', label: 'Placed', icon: '🕒' },
+  { key: 'confirmed', label: 'Confirmed', icon: '📋' },
+  { key: 'preparing', label: 'Preparing', icon: '🍿' },
+  { key: 'ready', label: 'Ready / On Way', icon: '🛵' },
+];
+
+const getStatusDetails = (status, deliveryMethod) => {
+  const isPickup = deliveryMethod === 'pickup';
+  switch ((status || '').toLowerCase()) {
+    case 'pending':
+      return {
+        stageIndex: 0,
+        title: '🕒 Order Received & Awaiting Seller Confirmation',
+        desc: 'We received your order! The J-Pop kitchen will review and confirm your snack prep shortly.',
+        badgeClass: 'badge-pending',
+        boxClass: '',
+      };
+    case 'confirmed':
+      return {
+        stageIndex: 1,
+        title: '📋 Order Confirmed by Store',
+        desc: 'Payment & order verified! Queued up for fresh artisan popping & frying.',
+        badgeClass: 'badge-confirmed',
+        boxClass: '',
+      };
+    case 'preparing':
+      return {
+        stageIndex: 2,
+        title: '🍿 Fresh Popping & Preparation in Progress!',
+        desc: 'Our chefs are actively popping and glazing your snacks fresh right now in Abra.',
+        badgeClass: 'badge-preparing',
+        boxClass: 'order-live-status-box--preparing',
+      };
+    case 'ready':
+      return {
+        stageIndex: 3,
+        title: isPickup ? '🛍️ Snacks Ready for Pickup!' : '🛵 Out for Delivery — On the Way!',
+        desc: isPickup
+          ? 'Your order is freshly packaged and ready for pickup at Poblacion, San Juan, Abra!'
+          : 'Your freshly packed snacks are out with our rider and heading to your delivery address!',
+        badgeClass: 'badge-ready',
+        boxClass: 'order-live-status-box--ready',
+      };
+    case 'delivered':
+      return {
+        stageIndex: 4,
+        title: isPickup ? '✅ Order Picked Up & Completed' : '🎉 Delivered to Your Doorstep!',
+        desc: 'Enjoy your delicious monster-mushroom popcorn and artisan donuts! Thank you!',
+        badgeClass: 'badge-delivered',
+        boxClass: 'order-live-status-box--delivered',
+      };
+    case 'cancelled':
+      return {
+        stageIndex: -1,
+        title: '❌ Order Cancelled',
+        desc: 'This order was cancelled. Please message our Live Chat if you need assistance.',
+        badgeClass: 'badge-cancelled',
+        boxClass: '',
+      };
+    default:
+      return {
+        stageIndex: 0,
+        title: '🕒 Order Received',
+        desc: 'Processing your order...',
+        badgeClass: 'badge-pending',
+        boxClass: '',
+      };
+  }
+};
 
 export default function ProfilePage() {
   const { user, isAuthenticated, loading, refreshProfile, logout } = useAuth();
@@ -20,12 +91,48 @@ export default function ProfilePage() {
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [previewReceipt, setPreviewReceipt] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: '',
     phone: '',
     address: '',
   });
+
+  const loadUserOrders = useCallback(async (isSilent = false) => {
+    if (!isSilent) setRefreshing(true);
+    try {
+      let serverOrders = [];
+      try {
+        const { data } = await ordersAPI.getMyOrders();
+        serverOrders = data.orders || [];
+      } catch {}
+
+      let localOrders = [];
+      try {
+        localOrders = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+      } catch {}
+
+      const combined = [...serverOrders];
+      for (const lo of localOrders) {
+        const matchIndex = combined.findIndex(o => String(o.id) === String(lo.id));
+        if (matchIndex === -1) {
+          combined.push(lo);
+        } else {
+          // Keep newer status or merged info
+          combined[matchIndex] = { ...lo, ...combined[matchIndex] };
+        }
+      }
+      combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(combined);
+    } catch (err) {
+      console.error('Failed to load user orders:', err);
+    } finally {
+      setLoadingOrders(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -40,18 +147,19 @@ export default function ProfilePage() {
         address: user.address || '',
       });
 
-      ordersAPI.getMyOrders()
-        .then(({ data }) => {
-          setOrders(data.orders || []);
-        })
-        .catch((err) => {
-          console.error('Failed to load user orders:', err);
-        })
-        .finally(() => {
-          setLoadingOrders(false);
-        });
+      loadUserOrders();
+      const interval = setInterval(() => loadUserOrders(true), 6000);
+      const handleStorageUpdate = () => loadUserOrders(true);
+      window.addEventListener('storage', handleStorageUpdate);
+      window.addEventListener('jpop_order_updated', handleStorageUpdate);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('storage', handleStorageUpdate);
+        window.removeEventListener('jpop_order_updated', handleStorageUpdate);
+      };
     }
-  }, [user, isAuthenticated, loading, router]);
+  }, [user, isAuthenticated, loading, router, loadUserOrders]);
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -155,18 +263,29 @@ export default function ProfilePage() {
 
         {/* Right Column: Order History & Tracking */}
         <div>
-          <h3 style={{ marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FiPackage /> Order History & Tracking
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FiPackage /> Live Order Tracking ({orders.length})
+            </h3>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => loadUserOrders()}
+              disabled={refreshing}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}
+            >
+              <FiRefreshCw className={refreshing ? 'animate-spin' : ''} /> {refreshing ? 'Refreshing...' : 'Refresh Status'}
+            </button>
+          </div>
 
           {loadingOrders ? (
-            <p className="text-muted">Loading orders...</p>
+            <p className="text-muted">Loading live orders...</p>
           ) : orders.length === 0 ? (
             <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
               <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🍿</div>
               <h4>No orders yet!</h4>
               <p className="text-muted" style={{ margin: '8px 0 20px' }}>
-                You haven't placed any popcorn orders yet. Browse our menu to satisfy your cravings!
+                You haven&apos;t placed any snack orders yet. Choose your favorite popcorn and donuts fresh in Abra!
               </p>
               <button className="btn btn-accent" onClick={() => router.push('/shop')}>
                 Explore Flavors
@@ -174,72 +293,167 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="profile-orders-list">
-              {orders.map((order) => (
-                <div key={order.id} className="order-card">
-                  <div className="order-card__header">
-                    <div>
-                      <strong>Order #{order.id}</strong>
-                      <span className="text-muted" style={{ fontSize: '0.82rem', marginLeft: '12px' }}>
-                        {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {orders.map((order) => {
+                const details = getStatusDetails(order.status, order.deliveryMethod);
+                return (
+                  <div key={order.id} className="order-card">
+                    {/* Header */}
+                    <div className="order-card__header">
+                      <div>
+                        <strong style={{ fontSize: '1.05rem', color: '#FFD32A' }}>Order #{order.id}</strong>
+                        <span className="text-muted" style={{ fontSize: '0.82rem', marginLeft: '12px' }}>
+                          {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <span className={`badge ${details.badgeClass}`}>
+                        {order.status?.toUpperCase()}
                       </span>
                     </div>
-                    <span className={`badge badge-${order.status}`}>
-                      {order.status}
-                    </span>
-                  </div>
 
-                  <div style={{ fontSize: '0.88rem', marginBottom: '12px' }}>
-                    <div>
-                      <strong>Method:</strong> {order.deliveryMethod === 'pickup' ? 'Store Pickup' : 'Doorstep Delivery'}
-                    </div>
-                    {order.deliveryAddress && (
-                      <div><strong>Address:</strong> {order.deliveryAddress}</div>
-                    )}
-                    {order.scheduledTime && (
-                      <div><strong>Scheduled For:</strong> {new Date(order.scheduledTime).toLocaleString()}</div>
-                    )}
-                    <div>
-                      <strong>Payment:</strong> {order.paymentMethod?.toUpperCase()} - {order.paymentConfirmed ? '✅ Confirmed' : '⏳ Verifying Receipt'}
-                    </div>
-                  </div>
-
-                  <div className="order-card__items">
-                    {order.items?.map((item, idx) => (
-                      <div key={idx} className="order-item-row">
-                        <span>
-                          {item.productName || `Product #${item.productId}`} {item.flavor ? `(${item.flavor})` : ''} &times; {item.quantity}
-                        </span>
-                        <strong>₱{parseFloat(item.priceAtTime * item.quantity).toFixed(2)}</strong>
+                    {/* Visual 4-Step Stepper */}
+                    {details.stageIndex >= 0 && (
+                      <div className="order-stepper">
+                        <div
+                          className="order-stepper-progress"
+                          style={{
+                            width: `${Math.min(100, (Math.min(details.stageIndex, 3) / 3) * 100)}%`
+                          }}
+                        />
+                        {STATUS_STAGES.map((st, sIdx) => {
+                          const isCompleted = details.stageIndex > sIdx;
+                          const isActive = details.stageIndex === sIdx;
+                          return (
+                            <div
+                              key={st.key}
+                              className={`stepper-step ${isActive ? 'stepper-step--active' : ''} ${isCompleted ? 'stepper-step--completed' : ''}`}
+                            >
+                              <div className="stepper-circle">
+                                {isCompleted ? <FiCheck size={16} /> : st.icon}
+                              </div>
+                              <span className="stepper-label">{st.label}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    )}
 
-                  <div className="order-card__footer">
-                    <span>Total Paid</span>
-                    <span style={{ fontSize: '1.2rem', color: 'var(--color-primary)' }}>
-                      ₱{parseFloat(order.total).toFixed(2)}
-                    </span>
-                  </div>
-
-                  {order.paymentReceiptUrl && (
-                    <div style={{ marginTop: '12px', textAlign: 'right' }}>
-                      <a
-                        href={order.paymentReceiptUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn btn-ghost btn-sm"
-                        style={{ fontSize: '0.8rem' }}
-                      >
-                        <FiExternalLink /> View Uploaded Receipt
-                      </a>
+                    {/* Live Condition Callout */}
+                    <div className={`order-live-status-box ${details.boxClass}`}>
+                      <div style={{ fontSize: '1.8rem', flexShrink: 0 }}>
+                        {details.stageIndex === 3 ? '🛵' : details.stageIndex === 2 ? '🍿' : details.stageIndex === 1 ? '📋' : details.stageIndex >= 4 ? '🎉' : '🕒'}
+                      </div>
+                      <div>
+                        <h5 style={{ margin: 0, color: '#FFD32A', fontSize: '0.98rem', fontWeight: 800 }}>
+                          {details.title}
+                        </h5>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                          {details.desc}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    {/* Delivery & Payment Info */}
+                    <div style={{ fontSize: '0.88rem', marginBottom: '14px', lineHeight: 1.6 }}>
+                      <div>
+                        <strong>Fulfillment:</strong>{' '}
+                        <span style={{ color: '#FFD32A', fontWeight: 700 }}>
+                          {order.deliveryMethod === 'pickup' ? '🛍️ Store Pickup (Poblacion, San Juan, Abra)' : '🚚 Doorstep Delivery'}
+                        </span>
+                      </div>
+                      {order.deliveryAddress && (
+                        <div><strong>Address / Landmark:</strong> {order.deliveryAddress}</div>
+                      )}
+                      {order.scheduledTime && (
+                        <div><strong>Scheduled Time:</strong> {new Date(order.scheduledTime).toLocaleString()}</div>
+                      )}
+                      <div>
+                        <strong>Payment:</strong> {order.paymentMethod?.toUpperCase()} &bull;{' '}
+                        <span style={{ color: order.paymentConfirmed ? '#2ED573' : '#FFA502', fontWeight: 700 }}>
+                          {order.paymentConfirmed ? '✅ Payment Verified' : '⏳ Verifying Transfer'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Items List */}
+                    <div className="order-card__items">
+                      {order.items?.map((item, idx) => (
+                        <div key={idx} className="order-item-row">
+                          <span>
+                            {item.productName || `Product #${item.productId}`} {item.flavor ? `(${item.flavor})` : ''} &times; {item.quantity}
+                          </span>
+                          <strong>₱{parseFloat(item.priceAtTime * item.quantity).toFixed(2)}</strong>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Footer Total */}
+                    <div className="order-card__footer">
+                      <span>Total Amount</span>
+                      <span style={{ fontSize: '1.25rem', color: '#FFD32A', fontWeight: 900 }}>
+                        ₱{parseFloat(order.total).toFixed(2)}
+                      </span>
+                    </div>
+
+                    {order.paymentReceiptUrl && (
+                      <div style={{ marginTop: '14px', textAlign: 'right' }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => setPreviewReceipt(formatImageUrl(order.paymentReceiptUrl))}
+                          style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <FiExternalLink /> View Payment Receipt
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* Modal: View Receipt */}
+      {previewReceipt && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '16px'
+        }}>
+          <div style={{
+            backgroundColor: '#1A1514',
+            border: '2px solid #FFD32A',
+            color: '#F7F1E9',
+            borderRadius: '18px',
+            padding: '24px',
+            maxWidth: '520px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.95)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#FFD32A' }}>Uploaded Payment Receipt</h4>
+              <button onClick={() => setPreviewReceipt(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <FiX size={22} />
+              </button>
+            </div>
+            {previewReceipt.startsWith('data:') || previewReceipt.startsWith('http') || previewReceipt.startsWith('/') ? (
+              <img
+                src={previewReceipt}
+                alt="Receipt"
+                style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: '8px', objectFit: 'contain' }}
+              />
+            ) : (
+              <p>{previewReceipt}</p>
+            )}
+            <div style={{ marginTop: '16px' }}>
+              <button className="btn btn-primary btn-sm" onClick={() => setPreviewReceipt(null)}>
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

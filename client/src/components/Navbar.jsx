@@ -13,10 +13,34 @@ import './Navbar.css';
 const Navbar = ({ onCartClick }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeOrderCount, setActiveOrderCount] = useState(0);
   const { user, isAuthenticated, isAdmin, logout, theme, toggleTheme } = useAuth();
   const itemCount = useCartStore((s) => s.getItemCount());
   const pathname = usePathname();
   const router = useRouter();
+
+  const checkActiveOrders = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+      const active = stored.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase()));
+      setActiveOrderCount(active.length);
+    } catch {
+      setActiveOrderCount(0);
+    }
+  };
+
+  useEffect(() => {
+    checkActiveOrders();
+    const handleOrderEvent = () => checkActiveOrders();
+    window.addEventListener('storage', handleOrderEvent);
+    window.addEventListener('jpop_order_updated', handleOrderEvent);
+    const interval = setInterval(checkActiveOrders, 4000);
+    return () => {
+      window.removeEventListener('storage', handleOrderEvent);
+      window.removeEventListener('jpop_order_updated', handleOrderEvent);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 15);
@@ -62,6 +86,16 @@ const Navbar = ({ onCartClick }) => {
           >
             Shop Menu
           </Link>
+          {activeOrderCount > 0 && (
+            <Link
+              href="/profile"
+              className={`navbar__link ${pathname === '/profile' ? 'navbar__link--active' : ''}`}
+              style={{ color: '#FFD32A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              📦 Track Order
+              <span className="navbar__order-bubble-inline">{activeOrderCount}</span>
+            </Link>
+          )}
           {isAdmin && (
             <Link
               href="/admin/dashboard"
@@ -82,6 +116,9 @@ const Navbar = ({ onCartClick }) => {
                     style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
                     <FiUser size={16} /> Profile ({user?.name?.split(' ')[0] || 'My Account'})
+                    {activeOrderCount > 0 && (
+                      <span className="navbar__order-bubble-inline">{activeOrderCount} active</span>
+                    )}
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -135,13 +172,18 @@ const Navbar = ({ onCartClick }) => {
               <Link
                 href="/profile"
                 className="navbar__user-btn"
-                title="View Profile"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                title="View Profile & Orders"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}
               >
                 <FiUser size={16} />
                 <span className="navbar__user-name">
                   {isAdmin ? 'Admin' : (user?.name?.split(' ')[0] || 'Profile')}
                 </span>
+                {activeOrderCount > 0 && (
+                  <span className="navbar__order-badge" title={`${activeOrderCount} order in progress`}>
+                    {activeOrderCount}
+                  </span>
+                )}
               </Link>
               <button
                 className="navbar__icon-btn"

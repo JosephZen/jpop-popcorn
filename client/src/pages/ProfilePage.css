@@ -22,8 +22,125 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 22px;
   box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.order-card:hover {
+  border-color: rgba(255, 211, 42, 0.4);
+}
+
+/* Live Order Stepper Tracking */
+.order-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: 22px 0 20px;
+  padding: 0 12px;
+}
+
+.order-stepper::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 28px;
+  right: 28px;
+  height: 4px;
+  background: var(--border-color, #3D3230);
+  z-index: 1;
+}
+
+.order-stepper-progress {
+  position: absolute;
+  top: 18px;
+  left: 28px;
+  height: 4px;
+  background: linear-gradient(90deg, #FFD32A, #2ED573);
+  z-index: 2;
+  transition: width 0.4s ease;
+}
+
+.stepper-step {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.stepper-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface, #1E1918);
+  border: 2px solid var(--border-color, #4D3F3D);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.stepper-step--active .stepper-circle {
+  background: #FFD32A;
+  border-color: #FFD32A;
+  color: #121010;
+  box-shadow: 0 0 14px rgba(255, 211, 42, 0.6);
+  transform: scale(1.12);
+}
+
+.stepper-step--completed .stepper-circle {
+  background: #2ED573;
+  border-color: #2ED573;
+  color: #FFFFFF;
+}
+
+.stepper-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  max-width: 82px;
+  line-height: 1.25;
+}
+
+.stepper-step--active .stepper-label {
+  color: #FFD32A;
+  font-weight: 800;
+}
+
+.stepper-step--completed .stepper-label {
+  color: var(--text-primary);
+}
+
+.order-live-status-box {
+  background: rgba(255, 211, 42, 0.08);
+  border: 1.5px solid rgba(255, 211, 42, 0.4);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.order-live-status-box--preparing {
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+.order-live-status-box--ready {
+  background: rgba(46, 213, 115, 0.08);
+  border-color: rgba(46, 213, 115, 0.5);
+}
+
+.order-live-status-box--delivered {
+  background: rgba(46, 213, 115, 0.12);
+  border-color: #2ED573;
 }
 
 .order-card__header {

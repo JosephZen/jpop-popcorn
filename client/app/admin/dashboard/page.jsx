@@ -545,8 +545,9 @@ export default function AdminDashboardPage() {
       toast.success(`Order #${orderId} status updated to ${newStatus}`);
       try {
         const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-        const updated = stored.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+        const updated = stored.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
         localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('jpop_order_updated'));
       } catch {}
       loadAllAdminData();
     } catch (err) {
@@ -560,8 +561,9 @@ export default function AdminDashboardPage() {
       toast.success(`Payment confirmed for Order #${orderId}! Order is now confirmed.`);
       try {
         const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-        const updated = stored.map(o => o.id === orderId ? { ...o, paymentConfirmed: true, status: 'confirmed' } : o);
+        const updated = stored.map(o => String(o.id) === String(orderId) ? { ...o, paymentConfirmed: true, status: 'confirmed' } : o);
         localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('jpop_order_updated'));
       } catch {}
       loadAllAdminData();
     } catch (err) {
@@ -1278,28 +1280,32 @@ export default function AdminDashboardPage() {
                         />
                       </div>
 
-                      {qr.imageUrl && (
-                        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-                          <img
-                            src={formatImageUrl(qr.imageUrl)}
-                            alt={`${methodKey} QR`}
-                            style={{
-                              maxWidth: '160px',
-                              maxHeight: '220px',
-                              width: 'auto',
-                              height: 'auto',
-                              objectFit: 'contain',
-                              background: '#fff',
-                              padding: '6px',
-                              borderRadius: '8px',
-                              border: '1px solid var(--border-color)',
-                              display: 'block',
-                              margin: '0 auto',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                            }}
-                          />
-                        </div>
-                      )}
+                      <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                        <img
+                          src={qr.imageUrl ? formatImageUrl(qr.imageUrl) : `/qr/${methodKey}.${methodKey === 'instapay' ? 'png' : 'jpg'}`}
+                          onError={(e) => {
+                            const fallback = `/qr/${methodKey}.${methodKey === 'instapay' ? 'png' : 'jpg'}`;
+                            if (!e.currentTarget.src.endsWith(fallback)) {
+                              e.currentTarget.src = fallback;
+                            }
+                          }}
+                          alt={`${methodKey} QR`}
+                          style={{
+                            maxWidth: '160px',
+                            maxHeight: '220px',
+                            width: 'auto',
+                            height: 'auto',
+                            objectFit: 'contain',
+                            background: '#fff',
+                            padding: '6px',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)',
+                            display: 'block',
+                            margin: '0 auto',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -1696,23 +1702,35 @@ export default function AdminDashboardPage() {
       {selectedReceiptUrl && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
           <div style={{
-            background: 'var(--bg-surface-elevated, #1E1918)',
-            border: '1px solid var(--border-color, #3D3230)',
-            color: 'var(--text-primary, #F7F1E9)',
-            borderRadius: '16px',
+            backgroundColor: '#1A1514',
+            border: '2px solid #FFD32A',
+            color: '#F7F1E9',
+            borderRadius: '18px',
             padding: '24px',
             maxWidth: '540px',
             width: '100%',
             textAlign: 'center',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.95)'
           }}>
-            <h4 style={{ marginBottom: '16px', fontSize: '1.2rem', fontWeight: 800 }}>Payment Receipt Screenshot</h4>
-            <div style={{ background: '#000', padding: '8px', borderRadius: '8px', display: 'inline-block', maxWidth: '100%' }}>
-              <img src={selectedReceiptUrl} alt="Customer Receipt" style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: '4px', objectFit: 'contain' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#FFD32A' }}>Customer Payment Receipt</h4>
+              <button onClick={() => setSelectedReceiptUrl(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <FiX size={22} />
+              </button>
             </div>
+            {selectedReceiptUrl.startsWith('data:') || selectedReceiptUrl.startsWith('http') || selectedReceiptUrl.startsWith('/') ? (
+              <div style={{ background: '#000', padding: '8px', borderRadius: '8px', display: 'inline-block', maxWidth: '100%' }}>
+                <img src={selectedReceiptUrl} alt="Customer Receipt" style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: '4px', objectFit: 'contain' }} />
+              </div>
+            ) : (
+              <div style={{ padding: '20px', background: '#2A2220', borderRadius: '8px', textAlign: 'left' }}>
+                <p style={{ margin: 0, color: '#FFD32A', fontWeight: 700 }}>Receipt Details:</p>
+                <p style={{ margin: '6px 0 0', color: '#F7F1E9' }}>{selectedReceiptUrl}</p>
+              </div>
+            )}
             <div style={{ marginTop: '16px' }}>
               <button className="btn btn-primary btn-md" onClick={() => setSelectedReceiptUrl(null)}>Close Preview</button>
             </div>

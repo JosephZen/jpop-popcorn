@@ -12,8 +12,7 @@ export const formatImageUrl = (url) => {
   if (!cleanPath.startsWith('/')) {
     cleanPath = `/${cleanPath}`;
   }
-  const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
-  return `${apiOrigin}${cleanPath}`;
+  return cleanPath;
 };
 
 const api = axios.create({
