@@ -61,12 +61,40 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const { data } = await authAPI.login({ email, password });
-    localStorage.setItem('jpop_token', data.token);
-    localStorage.setItem('jpop_user', JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+    try {
+      const { data } = await authAPI.login({ email, password });
+      localStorage.setItem('jpop_token', data.token);
+      localStorage.setItem('jpop_user', JSON.stringify(data.user));
+      setToken(data.token);
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      // Ephemeral serverless fallback: if account was registered on this device
+      if (err.response?.status === 401 && typeof window !== 'undefined') {
+        try {
+          const registry = JSON.parse(localStorage.getItem('jpop_local_registry') || '[]');
+          const normalized = (email || '').toLowerCase().trim();
+          const match = registry.find(u => u.email === normalized && u.password === password);
+          if (match) {
+            const regRes = await authAPI.register({
+              name: match.name,
+              email: match.email,
+              password: match.password,
+              phone: match.phone,
+              address: match.address,
+            });
+            if (regRes.data?.token) {
+              localStorage.setItem('jpop_token', regRes.data.token);
+              localStorage.setItem('jpop_user', JSON.stringify(regRes.data.user));
+              setToken(regRes.data.token);
+              setUser(regRes.data.user);
+              return regRes.data;
+            }
+          }
+        } catch {}
+      }
+      throw err;
+    }
   };
 
   const adminLogin = async (key, username) => {
@@ -95,6 +123,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('jpop_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
+
+    // Save to device registry for seamless persistence across serverless cold starts
+    try {
+      const registry = JSON.parse(localStorage.getItem('jpop_local_registry') || '[]');
+      const normalized = (formData.email || '').toLowerCase().trim();
+      const filtered = registry.filter(u => u.email !== normalized);
+      filtered.push({
+        name: formData.name,
+        email: normalized,
+        password: formData.password,
+        phone: formData.phone || null,
+        address: formData.address || null,
+      });
+      localStorage.setItem('jpop_local_registry', JSON.stringify(filtered));
+    } catch {}
+
     return data;
   };
 

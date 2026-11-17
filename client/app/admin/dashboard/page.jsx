@@ -1192,24 +1192,7 @@ export default function AdminDashboardPage() {
                       </div>
 
                       <div className="form-group" style={{ marginBottom: '10px' }}>
-                        <label className="form-label" style={{ fontSize: '0.8rem' }}>QR Image URL</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={qr.imageUrl || ''}
-                          onChange={(e) => setSettingsForm({
-                            ...settingsForm,
-                            qr_codes: {
-                              ...settingsForm.qr_codes,
-                              [methodKey]: { ...qr, imageUrl: e.target.value }
-                            }
-                          })}
-                          placeholder="Paste image link or upload below"
-                        />
-                      </div>
-
-                      <div className="form-group" style={{ marginBottom: '10px' }}>
-                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Upload QR Code Image</label>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Upload / Replace QR Image</label>
                         <input
                           type="file"
                           accept="image/*"
@@ -1224,14 +1207,14 @@ export default function AdminDashboardPage() {
                             src={formatImageUrl(qr.imageUrl)}
                             alt={`${methodKey} QR`}
                             style={{
-                              maxWidth: '180px',
-                              maxHeight: '260px',
+                              maxWidth: '160px',
+                              maxHeight: '220px',
                               width: 'auto',
                               height: 'auto',
                               objectFit: 'contain',
                               background: '#fff',
-                              padding: '8px',
-                              borderRadius: '10px',
+                              padding: '6px',
+                              borderRadius: '8px',
                               border: '1px solid var(--border-color)',
                               display: 'block',
                               margin: '0 auto',
@@ -1332,17 +1315,6 @@ export default function AdminDashboardPage() {
                       </small>
                     </div>
                   </div>
-                </div>
-
-                <div style={{ marginTop: '28px', textAlign: 'right' }}>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSaveAllSettings}
-                    disabled={savingSettings}
-                    style={{ padding: '12px 28px', fontSize: '1rem', fontWeight: 700 }}
-                  >
-                    <FiSave /> {savingSettings ? 'Saving All Settings...' : 'Save All Settings & QR Codes'}
-                  </button>
                 </div>
               </div>
             </div>
