@@ -212,11 +212,11 @@ const ChatWidget = () => {
           id: `bot_${Date.now()}`,
           senderType: 'bot',
           content: response.content,
+          offerLiveBtn: true,
+          queryText: text,
         },
       ]);
-      if (response.offerLive) {
-        setOfferLive(true);
-      }
+      setOfferLive(true);
     }, 450);
   };
 
@@ -284,6 +284,27 @@ const ChatWidget = () => {
             </div>
           </div>
 
+          {/* Persistent Facebook Messenger Banner */}
+          <div className="chat-messenger-banner">
+            <div className="chat-messenger-banner__content">
+              <span className="chat-messenger-banner__icon">
+                <MessengerIcon size={16} />
+              </span>
+              <div className="chat-messenger-banner__text">
+                <strong>Live Desk: Zen &amp; co.</strong>
+                <small>Send directly to Facebook Messenger</small>
+              </div>
+            </div>
+            <a
+              href={messengerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="chat-messenger-banner__btn"
+            >
+              Open ↗
+            </a>
+          </div>
+
           {/* Body */}
           <div className="chat-body">
             {messages.map((msg, index) => (
@@ -295,7 +316,22 @@ const ChatWidget = () => {
                     ? `${msg.adminName || 'Store Team'} (Live Agent) 🎧`
                     : 'You'}
                 </span>
-                <div className="chat-message__bubble" style={{ whiteSpace: 'pre-line' }}>{msg.content}</div>
+                <div className="chat-message__bubble" style={{ whiteSpace: 'pre-line' }}>
+                  {msg.content}
+                  {msg.offerLiveBtn && (
+                    <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
+                      <a
+                        href={messengerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="chat-messenger-btn"
+                        style={{ fontSize: '0.8rem', padding: '6px 12px', marginTop: '4px' }}
+                      >
+                        <MessengerIcon size={15} /> Chat with Zen &amp; co. on Messenger
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
 
