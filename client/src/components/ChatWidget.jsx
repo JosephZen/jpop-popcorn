@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
+import axios from 'axios';
 import { FiX, FiSend, FiHeadphones } from 'react-icons/fi';
 import { useAuth } from '../features/auth/AuthContext';
 import useCartStore from '../store/cartStore';
@@ -130,39 +130,34 @@ const ChatWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen, offerLive, isBotTyping]);
 
-  // Optional socket connection attempt (gracefully falls back if unavailable on Vercel)
+  // Poll messages periodically from server so admin replies show up live
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !sessionId) return;
 
-    try {
-      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || (typeof window !== 'undefined' ? window.location.origin : '');
-      if (socketUrl && socketUrl.startsWith('http') && !socketUrl.includes('vercel.app') && !socketUrl.includes('castrojosephzen.shop')) {
-        const socket = io(`${socketUrl}/chat`, {
-          transports: ['websocket', 'polling'],
-          timeout: 3000,
-        });
-        socketRef.current = socket;
+    const syncMessages = async () => {
+      try {
+        const res = await axios.get(`/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`);
+        const serverMsgs = res.data?.messages || [];
+        if (serverMsgs.length > 0) {
+          setMessages((prev) => {
+            const hasAdmin = serverMsgs.some((m) => m.senderType === 'admin');
+            if (hasAdmin) setSessionStatus('live');
 
-        socket.on('session_started', ({ session, message }) => {
-          if (session?.id) setSessionId(session.id);
-          if (message) setMessages(prev => [...prev, message]);
-        });
+            // Merge server messages avoiding duplicate IDs
+            const existingIds = new Set(prev.map((m) => String(m.id || m.createdAt)));
+            const newToAdd = serverMsgs.filter((sm) => !existingIds.has(String(sm.id || sm.createdAt)));
+            if (newToAdd.length === 0) return prev;
+            return [...prev, ...newToAdd];
+          });
+        }
+      } catch {}
+    };
 
-        socket.on('new_message', (msg) => {
-          setMessages((prev) => [...prev, msg]);
-          setIsBotTyping(false);
-        });
+    const interval = setInterval(syncMessages, 3000);
+    return () => clearInterval(interval);
+  }, [isOpen, sessionId]);
 
-        return () => {
-          socket.disconnect();
-        };
-      }
-    } catch {
-      // Socket not available; standalone bot handles everything
-    }
-  }, [isOpen]);
-
-  const sendMessage = (textToSend) => {
+  const sendMessage = async (textToSend) => {
     const text = (textToSend !== undefined ? textToSend : inputValue).trim();
     if (!text) return;
 
@@ -176,6 +171,17 @@ const ChatWidget = () => {
 
     setMessages((prev) => [...prev, newMsg]);
     if (!textToSend) setInputValue('');
+
+    // Push customer message to server so admin sees it in Admin Dashboard
+    try {
+      axios.post('/api/chat/messages', {
+        sessionId,
+        content: text,
+        senderType: 'customer',
+        customerName: user?.name || `Visitor #${sessionId.slice(-4)}`,
+        cart: items.length > 0 ? { itemCount: items.length, subtotal: getSubtotal() } : null,
+      }).catch(() => {});
+    } catch {}
 
     // Special action for Live Seller / Messenger
     if (text.includes('Chat Live Seller') || text.toLowerCase().includes('messenger')) {
@@ -192,31 +198,30 @@ const ChatWidget = () => {
       return;
     }
 
-    // If socket is actively connected, emit message
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('customer_message', {
-        sessionId,
-        content: text,
-      });
-      return;
-    }
-
     // Otherwise, generate intelligent bot response with natural typing delay
     setIsBotTyping(true);
     setTimeout(() => {
       const response = getBotAnswer(text, messengerUrl);
       setIsBotTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `bot_${Date.now()}`,
-          senderType: 'bot',
-          content: response.content,
-          offerLiveBtn: true,
-          queryText: text,
-        },
-      ]);
+      const botMsg = {
+        id: `bot_${Date.now()}`,
+        senderType: 'bot',
+        content: response.content,
+        offerLiveBtn: true,
+        queryText: text,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, botMsg]);
       setOfferLive(true);
+
+      // Record bot answer in session on server
+      try {
+        axios.post('/api/chat/messages', {
+          sessionId,
+          content: response.content,
+          senderType: 'bot',
+        }).catch(() => {});
+      } catch {}
     }, 450);
   };
 

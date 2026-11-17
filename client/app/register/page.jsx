@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FiArrowRight, FiUser, FiMail, FiLock, FiPhone, FiMapPin } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import JPopLogo from '../../src/components/JPopLogo';
+import SocialAuthButtons from '../../src/components/SocialAuthButtons';
 import toast from 'react-hot-toast';
 import '../../src/pages/AuthPages.css';
 
@@ -71,6 +72,9 @@ function RegisterForm() {
         <h2 className="auth-title">Join J-Pop Corner</h2>
         <p className="auth-subtitle">Create an account to save custom snacks & order fresh across Abra</p>
       </div>
+
+      {/* Google & Facebook Fast Sign-Up */}
+      <SocialAuthButtons redirectPath={redirectPath} />
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">

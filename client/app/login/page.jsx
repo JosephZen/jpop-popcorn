@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiArrowRight, FiLock, FiMail } from 'react-icons/fi';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import JPopLogo from '../../src/components/JPopLogo';
+import SocialAuthButtons from '../../src/components/SocialAuthButtons';
 import toast from 'react-hot-toast';
 import '../../src/pages/AuthPages.css';
 
@@ -13,10 +14,34 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithToken } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
+
+  // Handle incoming OAuth callback token or errors
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const social = searchParams.get('social');
+    const error = searchParams.get('error');
+
+    if (token) {
+      loginWithToken(token)
+        .then(() => {
+          toast.success(`Welcome to J-Pop Corner via ${social === 'facebook' ? 'Facebook' : 'Google'}! 🍿`);
+          router.push(redirectPath);
+        })
+        .catch(() => {
+          toast.error('Failed to log in with social account.');
+        });
+    }
+
+    if (error) {
+      if (error === 'google_auth_failed') toast.error('Google Sign-In was cancelled or failed.');
+      else if (error === 'facebook_auth_failed') toast.error('Facebook Sign-In was cancelled or failed.');
+      else toast.error('Social login error. Please try email login.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,6 +75,9 @@ function LoginForm() {
         <h2 className="auth-title">Welcome to J-Pop Corner</h2>
         <p className="auth-subtitle">Sign in to customize snacks and access exclusive Abra shipping promos</p>
       </div>
+
+      {/* Google and Facebook Social Login */}
+      <SocialAuthButtons redirectPath={redirectPath} />
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
