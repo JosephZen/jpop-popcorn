@@ -204,7 +204,7 @@ export default function CheckoutPage() {
   };
 
   // Automated Free Shipping Promo Calculation
-  const isFreeShipping = form.deliveryMethod === 'pickup' || promoStatus.isFree;
+  const isFreeShipping = form.deliveryMethod === 'pickup' || !!promoStatus?.isFree;
   const shippingFee = isFreeShipping ? 0 : baseDeliveryFee;
   const subtotal = getSubtotal();
   const grandTotal = subtotal + shippingFee;
@@ -378,7 +378,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Free Shipping Alert Banner */}
-        {promoStatus.isFree ? (
+        {promoStatus?.isFree ? (
           <div style={{
             background: '#27ae60',
             color: '#ffffff',

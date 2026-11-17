@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../../services/api';
+import useCartStore from '../../store/cartStore';
 
 const AuthContext = createContext(null);
 
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }) => {
           if (data?.user) {
             setUser(data.user);
             localStorage.setItem('jpop_user', JSON.stringify(data.user));
+            useCartStore.getState().initCart(data.user);
           }
         })
         .catch((err) => {
@@ -43,6 +45,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('jpop_user');
             setToken(null);
             setUser(null);
+            useCartStore.getState().resetCartOnLogout();
           }
         })
         .finally(() => {
@@ -67,6 +70,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('jpop_user', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
+      useCartStore.getState().initCart(data.user);
       return data;
     } catch (err) {
       // Ephemeral serverless fallback: if account was registered on this device
@@ -88,6 +92,7 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem('jpop_user', JSON.stringify(regRes.data.user));
               setToken(regRes.data.token);
               setUser(regRes.data.user);
+              useCartStore.getState().initCart(regRes.data.user);
               return regRes.data;
             }
           }
@@ -103,6 +108,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('jpop_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
+    useCartStore.getState().initCart(data.user);
     return data;
   };
 
@@ -113,6 +119,7 @@ export const AuthProvider = ({ children }) => {
     if (data?.user) {
       localStorage.setItem('jpop_user', JSON.stringify(data.user));
       setUser(data.user);
+      useCartStore.getState().initCart(data.user);
     }
     return data;
   };
@@ -123,6 +130,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('jpop_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
+    useCartStore.getState().initCart(data.user);
 
     // Save to device registry for seamless persistence across serverless cold starts
     try {
@@ -147,6 +155,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('jpop_user');
     setToken(null);
     setUser(null);
+    useCartStore.getState().resetCartOnLogout();
   };
 
   const refreshProfile = async () => {

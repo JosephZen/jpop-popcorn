@@ -1,13 +1,34 @@
 import { create } from 'zustand';
 import { cartAPI } from '../services/api';
 
-const STORAGE_KEY = 'jpop_cart';
+// Helper to determine the current user's isolated cart storage key
+const getCurrentUserKey = (overrideUser = null) => {
+  if (overrideUser?.email) {
+    return overrideUser.email.toLowerCase().trim();
+  }
+  if (typeof window === 'undefined') return 'guest';
+  try {
+    const raw = localStorage.getItem('jpop_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u?.email) return u.email.toLowerCase().trim();
+      if (u?.id) return `user_${u.id}`;
+    }
+  } catch {}
+  return 'guest';
+};
 
-// Helper to save locally
-const saveLocalCart = (items) => {
+const getCartStorageKey = (overrideUser = null) => {
+  const userKey = getCurrentUserKey(overrideUser);
+  return `jpop_cart_${userKey}`;
+};
+
+// Helper to save locally strictly to this user's isolated storage
+const saveLocalCart = (items, overrideUser = null) => {
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      const key = getCartStorageKey(overrideUser);
+      localStorage.setItem(key, JSON.stringify(items));
     } catch {}
   }
 };
@@ -40,46 +61,76 @@ export const useCartStore = create((set, get) => ({
   items: [],
   isHydrated: false,
 
-  initCart: async () => {
+  initCart: async (currentUser = null) => {
     if (typeof window !== 'undefined') {
+      let user = currentUser;
+      if (!user) {
+        try {
+          const raw = localStorage.getItem('jpop_user');
+          if (raw) user = JSON.parse(raw);
+        } catch {}
+      }
+
+      const token = localStorage.getItem('jpop_token');
+      const storageKey = getCartStorageKey(user);
+
+      // If user is guest (no session token)
+      if (!token || !user) {
+        let guestItems = [];
+        try {
+          const saved = localStorage.getItem('jpop_cart_guest');
+          if (saved) guestItems = JSON.parse(saved);
+        } catch {}
+        set({ items: guestItems, isHydrated: true });
+        return;
+      }
+
+      // If authenticated user (Customer or Admin)
       let localItems = [];
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          localItems = JSON.parse(saved);
-          set({ items: localItems, isHydrated: true });
-        }
+        const saved = localStorage.getItem(storageKey);
+        if (saved) localItems = JSON.parse(saved);
       } catch {}
 
-      // If user has token, fetch persistent cart from database
-      const token = localStorage.getItem('jpop_token');
-      if (token) {
-        try {
-          const { data } = await cartAPI.get();
-          if (data && Array.isArray(data.items) && data.items.length > 0) {
-            const dbItems = data.items.map(item => ({
-              productId: item.productId,
-              name: item.productName || item.name || 'J-Pop Snack',
-              price: parseFloat(item.price || 35.00),
-              imageUrl: item.imageUrl,
-              flavor: item.customizationPayload?.flavor || item.flavor || null,
-              size: item.customizationPayload?.size || item.sizeLabel || item.size || null,
-              quantity: item.quantity || 1,
-              customizationPayload: item.customizationPayload || {},
-            }));
-            set({ items: dbItems, isHydrated: true });
-            saveLocalCart(dbItems);
-            return;
-          } else if (localItems.length > 0) {
-            // Push existing local items up to the database
+      // Fetch persistent cart from database for this specific user
+      try {
+        const { data } = await cartAPI.get();
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          const dbItems = data.items.map(item => ({
+            productId: item.productId,
+            name: item.productName || item.name || 'J-Pop Snack',
+            price: parseFloat(item.price || 35.00),
+            imageUrl: item.imageUrl,
+            flavor: item.customizationPayload?.flavor || item.flavor || null,
+            size: item.customizationPayload?.size || item.sizeLabel || item.size || null,
+            quantity: item.quantity || 1,
+            customizationPayload: item.customizationPayload || {},
+          }));
+          set({ items: dbItems, isHydrated: true });
+          saveLocalCart(dbItems, user);
+          return;
+        } else {
+          // If remote cart is empty, use user's own local cart (or empty)
+          set({ items: localItems, isHydrated: true });
+          if (localItems.length > 0) {
             syncBackendCart(localItems);
           }
-        } catch (e) {
-          console.warn('Could not retrieve remote cart:', e.message);
+          return;
         }
+      } catch (e) {
+        set({ items: localItems, isHydrated: true });
       }
-      set({ isHydrated: true });
     }
+  },
+
+  resetCartOnLogout: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('jpop_cart');
+        localStorage.removeItem('jpop_cart_guest');
+      } catch {}
+    }
+    set({ items: [] });
   },
 
   addItem: (product, flavor = null, size = null, quantity = 1, customizationPayload = {}) => {

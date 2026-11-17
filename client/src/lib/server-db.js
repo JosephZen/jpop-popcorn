@@ -263,6 +263,7 @@ export const serverDb = {
   },
 
   insert: (table, row) => {
+    syncLoad();
     if (!globalStore[table]) globalStore[table] = [];
     const list = globalStore[table];
     let assignedId = row?.id;
@@ -281,6 +282,7 @@ export const serverDb = {
   },
 
   update: (table, predicate, updates) => {
+    syncLoad();
     if (!globalStore[table]) globalStore[table] = [];
     let updated = null;
     globalStore[table] = globalStore[table].map((r) => {
@@ -295,6 +297,7 @@ export const serverDb = {
   },
 
   delete: (table, predicate) => {
+    syncLoad();
     if (!globalStore[table]) return false;
     const beforeLen = globalStore[table].length;
     globalStore[table] = globalStore[table].filter(r => !predicate(r));
