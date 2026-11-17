@@ -23,6 +23,57 @@ import '../../src/pages/CheckoutPage.css';
 
 const STEPS = ['Delivery & Area', 'Schedule Time', 'Payment Mode', 'Review & Confirm'];
 
+const PHILIPPINE_PAYMENT_TIERS = [
+  {
+    tier: 'Tier 1',
+    name: 'Manual QR Ph / E-Wallets (Active)',
+    monthlyFee: '₱0 / month (0% setup fee)',
+    description: 'Direct peer-to-merchant QR codes for GCash, Maya, and InstaPay. Customer scans and uploads payment screenshot for verification.',
+  },
+  {
+    tier: 'Tier 2',
+    name: 'Merchant Aggregators (PayMongo / HitPay / Maya Business)',
+    monthlyFee: '1.5% - 2.5% per transaction fee',
+    description: 'Requires official DTI / SEC business registration certificate, Mayor’s Permit, and BIR 2303 for automated webhook callbacks.',
+  },
+];
+
+const compressReceiptImage = (file) => {
+  return new Promise((resolve) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          const maxDim = 800;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.75));
+        };
+        img.onerror = () => resolve(null);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    } catch {
+      resolve(null);
+    }
+  });
+};
+
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
   const { items, getSubtotal, clearCart, getFreeShippingStatus } = useCartStore();
@@ -131,10 +182,21 @@ export default function CheckoutPage() {
 
   const updateForm = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleReceiptUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      updateForm('receiptFile', file);
+  const handleReceiptUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    updateForm('receiptFile', file);
+    try {
+      const compressedData = await compressReceiptImage(file);
+      if (compressedData) {
+        updateForm('receiptPreview', compressedData);
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => updateForm('receiptPreview', reader.result);
+        reader.readAsDataURL(file);
+      }
+    } catch {
       const reader = new FileReader();
       reader.onloadend = () => updateForm('receiptPreview', reader.result);
       reader.readAsDataURL(file);
@@ -188,14 +250,14 @@ export default function CheckoutPage() {
     try {
       let receiptUrl = null;
 
-      // 1. If manual QR mode, attach screenshot (using instant preview base64 or upload)
+      // 1. If manual QR mode, attach screenshot (using compressed preview base64 or upload)
       if (checkoutMode === 'manual_qr') {
         if (form.receiptPreview) {
           receiptUrl = form.receiptPreview;
         } else if (form.receiptFile) {
           try {
             const { data: uploadRes } = await uploadAPI.uploadImage(form.receiptFile, 'receipts');
-            receiptUrl = uploadRes.url;
+            receiptUrl = uploadRes?.url || 'Uploaded Screenshot (Pending Review)';
           } catch {
             receiptUrl = 'Uploaded Screenshot (Pending Review)';
           }
@@ -228,7 +290,7 @@ export default function CheckoutPage() {
         deliveryAddress: `${form.deliveryAddress} - [${locationDetails}]`,
         deliveryNotes: form.deliveryNotes,
         scheduledTime: form.scheduledTime || null,
-        paymentMethod: checkoutMode === 'cash' ? 'cash' : form.paymentMethod,
+        paymentMethod: checkoutMode === 'cash' ? 'cash' : (form.paymentMethod || 'gcash'),
         paymentReceiptUrl: receiptUrl,
       };
 
@@ -255,15 +317,28 @@ export default function CheckoutPage() {
         items: serverOrder?.items || payload.items,
         createdAt: serverOrder?.createdAt || new Date().toISOString(),
       };
+
       try {
         const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-        const filtered = stored.filter(o => String(o.id) !== String(orderRecord.id));
+        const trimmed = Array.isArray(stored) ? stored.slice(0, 14) : [];
+        const filtered = trimmed.filter(o => String(o.id) !== String(orderRecord.id));
         filtered.unshift(orderRecord);
-        localStorage.setItem('jpop_persisted_orders', JSON.stringify(filtered));
+        try {
+          localStorage.setItem('jpop_persisted_orders', JSON.stringify(filtered));
+        } catch (quotaErr) {
+          console.warn('localStorage quota exceeded, storing sanitized copy:', quotaErr);
+          const sanitized = filtered.map(o => ({
+            ...o,
+            paymentReceiptUrl: (o.paymentReceiptUrl && o.paymentReceiptUrl.length > 200) ? 'receipt_uploaded' : o.paymentReceiptUrl
+          }));
+          localStorage.setItem('jpop_persisted_orders', JSON.stringify(sanitized));
+        }
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('jpop_order_updated'));
         }
-      } catch {}
+      } catch (storageErr) {
+        console.warn('Persisted order storage error:', storageErr);
+      }
 
       clearCart();
 
@@ -277,7 +352,12 @@ export default function CheckoutPage() {
     }
   };
 
-  const activeQr = qrCodes[form.paymentMethod];
+  const activeQr = (form.paymentMethod && qrCodes[form.paymentMethod]) || qrCodes.gcash || {
+    label: 'GCash',
+    accountName: 'Joseph Zen Castro',
+    accountNumber: '0912-345-6789',
+    imageUrl: '/qr/gcash.jpg',
+  };
 
   return (
     <div className="page checkout-page container">
@@ -729,10 +809,20 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   {form.scheduledTime && (
-                    <div><strong>Scheduled:</strong> {new Date(form.scheduledTime).toLocaleString()}</div>
+                    <div>
+                      <strong>Scheduled:</strong>{' '}
+                      {(() => {
+                        try {
+                          const d = new Date(form.scheduledTime);
+                          return isNaN(d.getTime()) ? form.scheduledTime : d.toLocaleString();
+                        } catch {
+                          return form.scheduledTime;
+                        }
+                      })()}
+                    </div>
                   )}
                   <div>
-                    <strong>Payment Mode:</strong> {checkoutMode === 'cash' ? '💵 Cash on Delivery / Store Pickup' : `📱 QR Ph (${form.paymentMethod.toUpperCase()})`}
+                    <strong>Payment Mode:</strong> {checkoutMode === 'cash' ? '💵 Cash on Delivery / Store Pickup' : `📱 QR Ph (${(form.paymentMethod || 'gcash').toUpperCase()})`}
                   </div>
                 </div>
 
@@ -743,7 +833,7 @@ export default function CheckoutPage() {
                       <span>
                         <strong>{item.name}</strong> {item.size ? `(${item.size})` : ''} {item.flavor ? `— ${item.flavor}` : ''} × {item.quantity}
                       </span>
-                      <strong>₱{(item.price * item.quantity).toFixed(2)}</strong>
+                      <strong>₱{(parseFloat(item.price || 0) * (parseInt(item.quantity) || 1)).toFixed(2)}</strong>
                     </div>
                   ))}
                 </div>

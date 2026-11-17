@@ -4,7 +4,7 @@ const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
 const API_BASE = (rawApiUrl && !rawApiUrl.includes('api.castrojosephzen.shop')) ? rawApiUrl : '/api';
 
 export const formatImageUrl = (url) => {
-  if (!url) return '/jpop-logo.svg';
+  if (!url || typeof url !== 'string') return '/jpop-logo.svg';
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }

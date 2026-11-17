@@ -139,6 +139,17 @@ export default function AdminDashboardPage() {
     }
   }, [isAdmin, loading, router]);
 
+  useEffect(() => {
+    if (showProductModal || showCategoryModal || showOptionModal || selectedReceiptUrl) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showProductModal, showCategoryModal, showOptionModal, selectedReceiptUrl]);
+
   const loadAllAdminData = () => {
     productsAPI.adminGetAll()
       .then(({ data }) => {
