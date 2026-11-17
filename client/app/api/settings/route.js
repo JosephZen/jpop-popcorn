@@ -46,9 +46,10 @@ const DEFAULT_SETTINGS = seedData.settings || {
   },
   facebook_messenger: {
     enabled: true,
-    url: 'https://m.me/josephzencastro',
+    url: 'https://m.me/2725998090803875',
     label: 'Chat with Team on Messenger',
-    username: 'josephzencastro',
+    username: '2725998090803875',
+    pageId: '2725998090803875',
   },
 };
 

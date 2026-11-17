@@ -8,7 +8,7 @@ import useCartStore from '../store/cartStore';
 import { settingsAPI } from '../services/api';
 import './ChatWidget.css';
 
-const DEFAULT_MESSENGER_URL = process.env.NEXT_PUBLIC_FB_MESSENGER_URL || 'https://m.me/josephzencastro';
+const DEFAULT_MESSENGER_URL = process.env.NEXT_PUBLIC_FB_MESSENGER_URL || 'https://m.me/2725998090803875';
 
 // Meta Messenger SVG Icon
 const MessengerIcon = ({ size = 18 }) => (

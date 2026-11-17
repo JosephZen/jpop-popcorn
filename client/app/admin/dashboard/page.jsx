@@ -117,8 +117,8 @@ export default function AdminDashboardPage() {
     },
     facebook_messenger: {
       enabled: true,
-      url: 'https://m.me/josephzencastro',
-      label: 'Chat with Joseph on Messenger',
+      url: 'https://m.me/2725998090803875',
+      label: 'Chat with Team on Messenger',
     },
     faq: [],
   });
@@ -167,7 +167,7 @@ export default function AdminDashboardPage() {
           },
           facebook_messenger: s.facebook_messenger || {
             enabled: true,
-            url: 'https://m.me/josephzencastro',
+            url: 'https://m.me/2725998090803875',
             label: 'Chat with Team on Messenger',
           },
           faq: Array.isArray(s.faq) ? s.faq : [],

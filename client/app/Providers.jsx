@@ -8,6 +8,7 @@ import Navbar from '../src/components/Navbar';
 import Footer from '../src/components/Footer';
 import CartDrawer from '../src/components/CartDrawer';
 import ChatWidget from '../src/components/ChatWidget';
+import MetaChatPlugin from '../src/components/MetaChatPlugin';
 import { usePathname } from 'next/navigation';
 import useCartStore from '../src/store/cartStore';
 
@@ -38,6 +39,7 @@ export default function Providers({ children }) {
           </main>
 
           {!isAdmin && <ChatWidget />}
+          {!isAdmin && <MetaChatPlugin pageId={process.env.NEXT_PUBLIC_FB_PAGE_ID || "2725998090803875"} />}
           {!isAdmin && <Footer />}
 
           <Toaster
