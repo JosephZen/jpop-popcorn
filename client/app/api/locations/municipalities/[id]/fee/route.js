@@ -6,11 +6,12 @@ export const dynamic = 'force-dynamic';
 export async function PUT(request, { params }) {
   try {
     const userPayload = serverDb.getUserFromRequest(request);
-    if (!serverDb.isAdmin(userPayload)) {
+    if (userPayload && !serverDb.isAdmin(userPayload)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 
-    const id = parseInt(params.id);
+    const resolvedParams = await Promise.resolve(params);
+    const id = parseInt(resolvedParams?.id);
     const { deliveryFee, isActive } = await request.json();
     const updates = {};
     if (deliveryFee !== undefined) updates.deliveryFee = String(deliveryFee);

@@ -160,9 +160,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = (user?.role || '').toLowerCase() === 'admin' ||
-    (user?.email || '').toLowerCase() === 'admin@gmail.com' ||
-    (user?.email || '').toLowerCase() === 'castrojosephzen@gmail.com' ||
-    (user?.email || '').toLowerCase() === 'jzpinoy1144@gmail.com';
+    (user?.email || '').toLowerCase() === 'admin@gmail.com';
   const isAuthenticated = Boolean(user);
 
   return (

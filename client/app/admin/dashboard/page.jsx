@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FiPackage,
@@ -58,6 +58,7 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
   const [shippingMatrix, setShippingMatrix] = useState([]);
+  const [shippingSearch, setShippingSearch] = useState('');
   const [expandedMunId, setExpandedMunId] = useState(null);
   const [settings, setSettings] = useState({});
 
@@ -545,23 +546,51 @@ export default function AdminDashboardPage() {
   };
 
   // ─── Shipping Matrix Handlers ───
+  const filteredShippingMatrix = useMemo(() => {
+    if (!shippingSearch.trim()) return shippingMatrix;
+    const q = shippingSearch.toLowerCase().trim();
+    return shippingMatrix.filter(m =>
+      (m.name || '').toLowerCase().includes(q) ||
+      (m.barangays || []).some(b => (b.name || '').toLowerCase().includes(q))
+    );
+  }, [shippingMatrix, shippingSearch]);
+
   const handleUpdateMunicipalityFee = async (munId, fee) => {
+    const cleanFee = parseFloat(fee) || 0;
+    setShippingMatrix(prev => prev.map(m => m.id === munId ? { ...m, deliveryFee: cleanFee.toFixed(2) } : m));
     try {
-      await locationsAPI.updateMunicipalityFee(munId, { deliveryFee: fee });
+      await locationsAPI.updateMunicipalityFee(munId, { deliveryFee: cleanFee.toFixed(2) });
       toast.success('Municipality delivery rate updated!');
-      loadAllAdminData();
     } catch (err) {
       toast.error('Failed to update rate.');
+      loadAllAdminData();
+    }
+  };
+
+  const handleToggleMunicipalityActive = async (munId, currentActive) => {
+    const newStatus = !currentActive;
+    setShippingMatrix(prev => prev.map(m => m.id === munId ? { ...m, isActive: newStatus } : m));
+    try {
+      await locationsAPI.updateMunicipalityFee(munId, { isActive: newStatus });
+      toast.success(`Municipality status updated!`);
+    } catch (err) {
+      toast.error('Failed to update status.');
+      loadAllAdminData();
     }
   };
 
   const handleUpdateBarangayFee = async (bId, fee) => {
+    const val = fee ? (parseFloat(fee) || 0).toFixed(2) : null;
+    setShippingMatrix(prev => prev.map(m => ({
+      ...m,
+      barangays: (m.barangays || []).map(b => b.id === bId ? { ...b, customDeliveryFee: val } : b)
+    })));
     try {
-      await locationsAPI.updateBarangayFee(bId, { customDeliveryFee: fee || null });
+      await locationsAPI.updateBarangayFee(bId, { customDeliveryFee: val });
       toast.success('Barangay delivery rate updated!');
-      loadAllAdminData();
     } catch (err) {
       toast.error('Failed to update barangay rate.');
+      loadAllAdminData();
     }
   };
 
@@ -610,7 +639,16 @@ export default function AdminDashboardPage() {
   const handleChangeUserRole = async (userId, role) => {
     try {
       await authAPI.updateUserRole(userId, role);
-      toast.success('User role updated.');
+      toast.success(`User role updated to ${role.toUpperCase()}.`);
+      // If toggling the currently active session user
+      if (user && user.id === userId) {
+        const updatedUser = { ...user, role };
+        localStorage.setItem('jpop_user', JSON.stringify(updatedUser));
+        if (role.toLowerCase() !== 'admin') {
+          toast('Your account was toggled to customer role.', { icon: 'ℹ️' });
+          router.push('/profile');
+        }
+      }
       loadAllAdminData();
     } catch (err) {
       toast.error('Failed to update role.');
@@ -925,11 +963,23 @@ export default function AdminDashboardPage() {
       {/* ─── TAB 3: ABRA SHIPPING MATRIX TABLE ─── */}
       {activeTab === 'shipping' && (
         <div>
-          <div style={{ marginBottom: '20px' }}>
-            <h3>Abra Municipality & Barangay Shipping Rates Matrix</h3>
-            <p className="text-muted" style={{ fontSize: '0.88rem' }}>
-              Set and update distance-based PHP delivery rates for all 27 municipalities of Abra or individual barangays.
-            </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px 0' }}>Abra Municipality & Barangay Shipping Rates Matrix ({shippingMatrix.length})</h3>
+              <p className="text-muted" style={{ margin: 0, fontSize: '0.88rem' }}>
+                Set distance-based PHP delivery rates for all 27 municipalities of Abra or individual barangays.
+              </p>
+            </div>
+            <div style={{ width: '280px', maxWidth: '100%' }}>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="🔍 Search municipality or barangay..."
+                value={shippingSearch}
+                onChange={(e) => setShippingSearch(e.target.value)}
+                style={{ fontSize: '0.86rem', padding: '8px 12px' }}
+              />
+            </div>
           </div>
 
           <div className="admin-table-container">
@@ -944,10 +994,10 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {shippingMatrix.map((mun) => {
+                {filteredShippingMatrix.map((mun) => {
                   const isExpanded = expandedMunId === mun.id;
                   return (
-                    <React.Fragment key={mun.id}>
+                    <Fragment key={mun.id}>
                       <tr>
                         <td>
                           <strong>{mun.name}</strong>
@@ -966,9 +1016,15 @@ export default function AdminDashboardPage() {
                           </div>
                         </td>
                         <td>
-                          <span className={`status-badge ${mun.isActive ? 'status-badge--ready' : 'status-badge--cancelled'}`}>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMunicipalityActive(mun.id, mun.isActive)}
+                            className={`status-badge ${mun.isActive ? 'status-badge--ready' : 'status-badge--cancelled'}`}
+                            style={{ cursor: 'pointer', border: 'none', background: 'transparent' }}
+                            title="Click to toggle Active / Disabled"
+                          >
                             {mun.isActive ? 'Active' : 'Disabled'}
-                          </span>
+                          </button>
                         </td>
                         <td>
                           <button
@@ -1013,7 +1069,7 @@ export default function AdminDashboardPage() {
                           </td>
                         </tr>
                       )}
-                    </React.Fragment>
+                    </Fragment>
                   );
                 })}
               </tbody>

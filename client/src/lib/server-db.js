@@ -149,7 +149,10 @@ if (!globalStore) {
       const persisted = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
       if (Array.isArray(persisted.users)) {
         for (const u of persisted.users) {
-          if (!globalStore.users.some(existing => existing.id === u.id || existing.email.toLowerCase() === u.email.toLowerCase())) {
+          const idx = globalStore.users.findIndex(existing => existing.id === u.id || (existing.email && existing.email.toLowerCase() === (u.email || '').toLowerCase()));
+          if (idx !== -1) {
+            globalStore.users[idx] = { ...globalStore.users[idx], ...u };
+          } else {
             globalStore.users.push(u);
           }
         }
@@ -221,7 +224,10 @@ const syncLoad = () => {
       if (Array.isArray(persisted.chat_messages)) globalStore.chat_messages = persisted.chat_messages;
       if (Array.isArray(persisted.users)) {
         for (const u of persisted.users) {
-          if (!globalStore.users.some(existing => existing.id === u.id || existing.email.toLowerCase() === u.email.toLowerCase())) {
+          const idx = globalStore.users.findIndex(existing => existing.id === u.id || (existing.email && existing.email.toLowerCase() === (u.email || '').toLowerCase()));
+          if (idx !== -1) {
+            globalStore.users[idx] = { ...globalStore.users[idx], ...u };
+          } else {
             globalStore.users.push(u);
           }
         }
@@ -379,14 +385,13 @@ export const serverDb = {
 
   isAdmin: (userPayload) => {
     if (!userPayload) return false;
-    const role = (userPayload.role || '').toLowerCase();
     const email = (userPayload.email || '').toLowerCase();
-    return (
-      role === 'admin' ||
-      email === 'admin@gmail.com' ||
-      email === 'castrojosephzen@gmail.com' ||
-      email === 'jzpinoy1144@gmail.com'
-    );
+    if (email === 'admin@gmail.com') return true;
+
+    // Look up live user in DB to reflect role toggles immediately
+    const userInDb = serverDb.findOne('users', u => u.id === userPayload.id || (u.email && u.email.toLowerCase() === email));
+    const role = (userInDb?.role || userPayload.role || '').toLowerCase();
+    return role === 'admin';
   },
 
   comparePassword: async (password, hash) => {
