@@ -62,7 +62,7 @@ if (!globalStore) {
         name: 'Joseph Zen Castro',
         phone: '0912-345-6789',
         address: 'Poblacion, San Juan, Abra',
-        role: 'ADMIN',
+        role: 'customer',
         createdAt: new Date().toISOString(),
       },
       {
@@ -72,7 +72,7 @@ if (!globalStore) {
         name: 'Joseph Zen Castro',
         phone: '0912-345-6789',
         address: 'Poblacion, San Juan, Abra',
-        role: 'ADMIN',
+        role: 'customer',
         createdAt: new Date().toISOString(),
       },
       {
@@ -111,7 +111,13 @@ if (!globalStore) {
       sizeLabel: p.sizeLabel || (p.name.includes('1kg') ? '1kg' : '500g'),
       category: p.category || (p.name.includes('Donut') ? 'mini-donut' : 'popcorn'),
       categoryId: p.categoryId || (p.category === 'mini-donut' ? 2 : 1),
-      imageUrl: p.imageUrl,
+      imageUrl: (p.imageUrl && p.imageUrl.includes('photo-1572177215152'))
+        ? 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80'
+        : (p.imageUrl && p.imageUrl.includes('photo-1585237432822'))
+        ? 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600&q=80'
+        : (p.imageUrl && p.imageUrl.includes('photo-1527515637462'))
+        ? 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&q=80'
+        : (p.imageUrl || (p.name.includes('Donut') ? 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=600&q=80' : 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80')),
       flavors: p.flavors || ['Spicy BBQ', 'Sour Cream & Onion', 'Cheese', 'BBQ'],
       sizes: p.sizes || [],
       isActive: p.isActive !== false,
@@ -361,6 +367,18 @@ export const serverDb = {
     } catch {
       return null;
     }
+  },
+
+  isAdmin: (userPayload) => {
+    if (!userPayload) return false;
+    const role = (userPayload.role || '').toLowerCase();
+    const email = (userPayload.email || '').toLowerCase();
+    return (
+      role === 'admin' ||
+      email === 'admin@gmail.com' ||
+      email === 'castrojosephzen@gmail.com' ||
+      email === 'jzpinoy1144@gmail.com'
+    );
   },
 
   comparePassword: async (password, hash) => {

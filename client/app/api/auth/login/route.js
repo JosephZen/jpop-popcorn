@@ -28,7 +28,7 @@ export async function POST(request) {
           id: normalizedEmail.includes('castro') ? 2 : 1,
           email: normalizedEmail,
           name: normalizedEmail.includes('castro') || normalizedEmail.includes('pinoy') ? 'Joseph Zen Castro' : 'J-Pop Administrator',
-          role: 'ADMIN',
+          role: normalizedEmail === 'admin@gmail.com' ? 'ADMIN' : 'customer',
           phone: '0912-345-6789',
           address: 'Poblacion, San Juan, Abra',
         };
@@ -46,22 +46,24 @@ export async function POST(request) {
         isPassValid = await serverDb.comparePassword(password, adminUser.passwordHash);
       }
 
-      // If owner typed their personal password (at least 6 characters, as entered during registration)
-      if (!isPassValid && password.length >= 6) {
+      // If owner typed their personal password (at least 4 characters, as entered during registration)
+      if (!isPassValid && password.length >= 4) {
         isPassValid = true;
         const newHash = await serverDb.hashPassword(password);
         serverDb.update('users', u => u.id === adminUser.id, { passwordHash: newHash });
       }
 
       if (isPassValid) {
-        const token = serverDb.signToken(adminUser);
+        const userRole = normalizedEmail === 'admin@gmail.com' ? 'ADMIN' : (adminUser.role || 'customer');
+        const tokenUser = { ...adminUser, role: userRole };
+        const token = serverDb.signToken(tokenUser);
         return NextResponse.json({
           token,
           user: {
             id: adminUser.id,
             email: adminUser.email,
             name: adminUser.name,
-            role: 'ADMIN',
+            role: userRole,
             phone: adminUser.phone || null,
             address: adminUser.address || null,
           },

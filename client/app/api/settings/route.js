@@ -68,11 +68,7 @@ export async function GET() {
 export async function PUT(request) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    const isAdmin = user && (
-      (user.role || '').toLowerCase() === 'admin' ||
-      (user.email || '').toLowerCase() === 'admin@gmail.com'
-    );
-    if (!isAdmin) {
+    if (!serverDb.isAdmin(user)) {
       return NextResponse.json({ error: 'Admin access required. Please sign in to the Admin Desk.' }, { status: 403 });
     }
 

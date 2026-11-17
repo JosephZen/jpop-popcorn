@@ -38,7 +38,7 @@
       "sizes": ["500g Resealable Pouch"],
       "isActive": true,
       "sortOrder": 1,
-      "imageUrl": "https://images.unsplash.com/photo-1572177215152-32f247303126?w=600&q=80"
+      "imageUrl": "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80"
     },
     {
       "name": "J-Pop Gourmet Popcorn (1kg Party Bag)",
@@ -52,7 +52,7 @@
       "sizes": ["1kg Jumbo Party Bag"],
       "isActive": true,
       "sortOrder": 2,
-      "imageUrl": "https://images.unsplash.com/photo-1585237432822-75d18d41ff1a?w=600&q=80"
+      "imageUrl": "https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600&q=80"
     },
     {
       "name": "Mini Donuts (Box of 8)",
@@ -80,7 +80,7 @@
       "sizes": ["16 Pieces Box"],
       "isActive": true,
       "sortOrder": 4,
-      "imageUrl": "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=80"
+      "imageUrl": "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&q=80"
     }
   ],
   "customizationOptions": [
@@ -107,19 +107,19 @@
         "label": "GCash",
         "accountName": "Joseph Zen Castro",
         "accountNumber": "0912-345-6789",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH:09123456789;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "imageUrl": "/qr/gcash.jpg"
       },
       "maya": {
         "label": "Maya",
         "accountName": "Joseph Zen Castro",
         "accountNumber": "0912-345-6789",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MAYA:09123456789;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "imageUrl": "/qr/maya.jpg"
       },
       "instapay": {
         "label": "InstaPay",
-        "accountName": "Joseph Zen Castro (BDO/BPI)",
-        "accountNumber": "1234-5678-9012",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:123456789012;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "accountName": "Joseph Zen Castro (Maribank)",
+        "accountNumber": "10555184277",
+        "imageUrl": "/qr/instapay.png"
       }
     },
     "faq": [

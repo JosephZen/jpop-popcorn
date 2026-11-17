@@ -229,7 +229,34 @@ export default function CheckoutPage() {
         paymentReceiptUrl: receiptUrl,
       };
 
-      await ordersAPI.create(payload);
+      const res = await ordersAPI.create(payload);
+      const serverOrder = res.data?.order;
+      const orderRecord = {
+        id: serverOrder?.id || Date.now(),
+        userId: user?.id || 1,
+        customerName: user?.name || 'Customer',
+        customerEmail: user?.email || '',
+        customerPhone: user?.phone || '',
+        status: 'pending',
+        subtotal: serverOrder?.subtotal || getSubtotal().toFixed(2),
+        shippingFee: serverOrder?.shippingFee || '0.00',
+        total: serverOrder?.total || (getSubtotal() + (form.deliveryMethod === 'delivery' ? baseDeliveryFee : 0)).toFixed(2),
+        deliveryMethod: payload.deliveryMethod,
+        deliveryAddress: payload.deliveryAddress,
+        deliveryNotes: payload.deliveryNotes,
+        scheduledTime: payload.scheduledTime,
+        paymentMethod: payload.paymentMethod,
+        paymentReceiptUrl: payload.paymentReceiptUrl,
+        paymentConfirmed: false,
+        items: payload.items,
+        createdAt: new Date().toISOString(),
+      };
+      try {
+        const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+        stored.unshift(orderRecord);
+        localStorage.setItem('jpop_persisted_orders', JSON.stringify(stored));
+      } catch {}
+
       clearCart();
 
       toast.success('🎉 Order placed successfully! We will prepare your snacks fresh! 🍿');

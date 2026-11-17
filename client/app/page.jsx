@@ -17,7 +17,17 @@ export default function HomePage() {
   useEffect(() => {
     productsAPI.getAll()
       .then(({ data }) => {
-        setFeatured(data.products.slice(0, 8));
+        let prods = data.products || [];
+        try {
+          const custom = JSON.parse(localStorage.getItem('jpop_persisted_products') || '[]');
+          if (custom.length > 0) {
+            prods = prods.map(p => {
+              const match = custom.find(cp => cp.id === p.id);
+              return match ? { ...p, ...match } : p;
+            });
+          }
+        } catch {}
+        setFeatured(prods.slice(0, 8));
       })
       .catch(() => {});
 

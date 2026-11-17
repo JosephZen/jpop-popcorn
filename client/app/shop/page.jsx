@@ -19,7 +19,17 @@ export default function ShopPage() {
       categoriesAPI.getAll().catch(() => ({ data: { categories: [] } })),
     ])
       .then(([prodRes, catRes]) => {
-        setProducts(prodRes.data.products || []);
+        let prods = prodRes.data.products || [];
+        try {
+          const custom = JSON.parse(localStorage.getItem('jpop_persisted_products') || '[]');
+          if (custom.length > 0) {
+            prods = prods.map(p => {
+              const match = custom.find(cp => cp.id === p.id);
+              return match ? { ...p, ...match } : p;
+            });
+          }
+        } catch {}
+        setProducts(prods);
         setCategories(catRes.data?.categories || []);
       })
       .catch((err) => {

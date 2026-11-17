@@ -25,7 +25,7 @@ const AuthModal = ({ isOpen, onClose, pendingItem = null }) => {
       padding: '16px',
     }}>
       <div style={{
-        backgroundColor: '#1E1918',
+        backgroundColor: '#1A1514',
         border: '2px solid #FFD32A',
         color: '#F7F1E9',
         borderRadius: '20px',
@@ -33,7 +33,7 @@ const AuthModal = ({ isOpen, onClose, pendingItem = null }) => {
         maxWidth: '460px',
         padding: '36px 28px',
         position: 'relative',
-        boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
+        boxShadow: '0 25px 70px rgba(0, 0, 0, 0.95)',
         textAlign: 'center',
       }}>
         {/* Close Button */}

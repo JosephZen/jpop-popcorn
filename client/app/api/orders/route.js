@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import serverDb from '@/lib/server-db';
 
+export const dynamic = 'force-dynamic';
+
 const calculateShipping = (items, deliveryMethod, municipalityId, barangayId) => {
   if (deliveryMethod === 'pickup') {
     return { shippingFee: 0, promoApplied: false, reason: 'Store Pickup' };

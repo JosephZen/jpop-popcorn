@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import serverDb from '@/lib/server-db';
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(request, { params }) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    if (!user || user.role !== 'ADMIN') {
+    if (!serverDb.isAdmin(user)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 

@@ -141,8 +141,25 @@ export default function AdminDashboardPage() {
 
   const loadAllAdminData = () => {
     productsAPI.adminGetAll()
-      .then(({ data }) => setProducts(data.products || []))
-      .catch(() => {});
+      .then(({ data }) => {
+        let prods = data.products || [];
+        try {
+          const custom = JSON.parse(localStorage.getItem('jpop_persisted_products') || '[]');
+          if (custom.length > 0) {
+            prods = prods.map(p => {
+              const match = custom.find(cp => cp.id === p.id);
+              return match ? { ...p, ...match } : p;
+            });
+          }
+        } catch {}
+        setProducts(prods);
+      })
+      .catch(() => {
+        try {
+          const custom = JSON.parse(localStorage.getItem('jpop_persisted_products') || '[]');
+          if (custom.length > 0) setProducts(custom);
+        } catch {}
+      });
 
     categoriesAPI.getAll()
       .then(({ data }) => setCategories(data.categories || []))
@@ -153,8 +170,28 @@ export default function AdminDashboardPage() {
       .catch(() => {});
 
     ordersAPI.adminGetAll()
-      .then(({ data }) => setOrders(data.orders || []))
-      .catch(() => {});
+      .then(({ data }) => {
+        let serverOrders = data.orders || [];
+        try {
+          const localOrders = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+          const combined = [...serverOrders];
+          for (const lo of localOrders) {
+            if (!combined.some(o => o.id === lo.id)) {
+              combined.push(lo);
+            }
+          }
+          combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setOrders(combined);
+        } catch {
+          setOrders(serverOrders);
+        }
+      })
+      .catch(() => {
+        try {
+          const localOrders = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+          setOrders(localOrders);
+        } catch {}
+      });
 
     authAPI.getUsers()
       .then(({ data }) => setUsers(data.users || []))
@@ -163,29 +200,44 @@ export default function AdminDashboardPage() {
     settingsAPI.get()
       .then(({ data }) => {
         const s = data.settings || {};
+        let persistedSettings = {};
+        try {
+          persistedSettings = JSON.parse(localStorage.getItem('jpop_persisted_settings') || '{}');
+        } catch {}
+
+        const persistedOauth = persistedSettings.oauth || {};
+        const mergedOauth = {
+          google_client_id: s.oauth?.google_client_id || persistedOauth.google_client_id || '',
+          google_client_secret: s.oauth?.google_client_secret || persistedOauth.google_client_secret || '',
+          facebook_app_id: s.oauth?.facebook_app_id || persistedOauth.facebook_app_id || '',
+          facebook_app_secret: s.oauth?.facebook_app_secret || persistedOauth.facebook_app_secret || '',
+        };
+
         setSettings(s);
         setSettingsForm({
-          site_customization: s.site_customization || { heroTitle: '', heroSubtitle: '', bannerAnnouncement: '' },
-          qr_codes: s.qr_codes || {
+          site_customization: s.site_customization || persistedSettings.site_customization || { heroTitle: '', heroSubtitle: '', bannerAnnouncement: '' },
+          qr_codes: s.qr_codes || persistedSettings.qr_codes || {
             gcash: { label: 'GCash', accountName: 'Joseph Zen Castro', accountNumber: '0912-345-6789', imageUrl: '/qr/gcash.jpg' },
             maya: { label: 'Maya', accountName: 'Joseph Zen Castro', accountNumber: '0912-345-6789', imageUrl: '/qr/maya.jpg' },
             instapay: { label: 'InstaPay', accountName: 'Joseph Zen Castro (Maribank)', accountNumber: '10555184277', imageUrl: '/qr/instapay.png' },
           },
-          facebook_messenger: s.facebook_messenger || {
+          facebook_messenger: s.facebook_messenger || persistedSettings.facebook_messenger || {
             enabled: true,
             url: 'https://m.me/2725998090803875',
             label: 'Chat with Team on Messenger',
           },
-          oauth: s.oauth || {
-            google_client_id: '',
-            google_client_secret: '',
-            facebook_app_id: '',
-            facebook_app_secret: '',
-          },
-          faq: Array.isArray(s.faq) ? s.faq : [],
+          oauth: mergedOauth,
+          faq: Array.isArray(s.faq) && s.faq.length > 0 ? s.faq : (persistedSettings.faq || []),
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        try {
+          const persistedSettings = JSON.parse(localStorage.getItem('jpop_persisted_settings') || '{}');
+          if (persistedSettings.qr_codes) {
+            setSettingsForm(prev => ({ ...prev, ...persistedSettings }));
+          }
+        } catch {}
+      });
   };
 
   // ─── Image Compression Helper (Keeps QR & Product Images Sharp & Lightweight) ───
@@ -315,9 +367,21 @@ export default function AdminDashboardPage() {
       if (editingProduct) {
         await productsAPI.update(editingProduct.id, payload);
         toast.success('Product updated successfully! 🍿');
+        try {
+          const stored = JSON.parse(localStorage.getItem('jpop_persisted_products') || '[]');
+          const updatedList = stored.filter(p => p.id !== editingProduct.id);
+          updatedList.push({ id: editingProduct.id, ...payload });
+          localStorage.setItem('jpop_persisted_products', JSON.stringify(updatedList));
+        } catch {}
       } else {
-        await productsAPI.create(payload);
+        const res = await productsAPI.create(payload);
         toast.success('New product created successfully! 🍿');
+        try {
+          const stored = JSON.parse(localStorage.getItem('jpop_persisted_products') || '[]');
+          const newId = res.data?.product?.id || Date.now();
+          stored.push({ id: newId, ...payload });
+          localStorage.setItem('jpop_persisted_products', JSON.stringify(stored));
+        } catch {}
       }
 
       setShowProductModal(false);
@@ -479,6 +543,11 @@ export default function AdminDashboardPage() {
     try {
       await ordersAPI.updateStatus(orderId, newStatus);
       toast.success(`Order #${orderId} status updated to ${newStatus}`);
+      try {
+        const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+        const updated = stored.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+        localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
+      } catch {}
       loadAllAdminData();
     } catch (err) {
       toast.error('Failed to update order status.');
@@ -489,6 +558,11 @@ export default function AdminDashboardPage() {
     try {
       await ordersAPI.confirmPayment(orderId);
       toast.success(`Payment confirmed for Order #${orderId}! Order is now confirmed.`);
+      try {
+        const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+        const updated = stored.map(o => o.id === orderId ? { ...o, paymentConfirmed: true, status: 'confirmed' } : o);
+        localStorage.setItem('jpop_persisted_orders', JSON.stringify(updated));
+      } catch {}
       loadAllAdminData();
     } catch (err) {
       toast.error('Failed to confirm payment.');
@@ -547,6 +621,9 @@ export default function AdminDashboardPage() {
   const handleSaveAllSettings = async () => {
     setSavingSettings(true);
     try {
+      try {
+        localStorage.setItem('jpop_persisted_settings', JSON.stringify(settingsForm));
+      } catch {}
       const res = await settingsAPI.bulkUpdate(settingsForm);
       toast.success(res.data?.message || 'All site customizations and QR codes saved and applied! 🚀');
       loadAllAdminData();
@@ -1326,19 +1403,19 @@ export default function AdminDashboardPage() {
       {showProductModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
           <div style={{
-            background: 'var(--bg-surface-elevated, #1E1918)',
-            border: '1px solid var(--border-color, #3D3230)',
-            color: 'var(--text-primary, #F7F1E9)',
-            borderRadius: '16px',
+            backgroundColor: '#1A1514',
+            border: '2px solid #FFD32A',
+            color: '#F7F1E9',
+            borderRadius: '18px',
             width: '100%',
             maxWidth: '560px',
             padding: '28px',
-            maxHeight: '90vh',
+            maxHeight: '88vh',
             overflowY: 'auto',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.95)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #3D3230)', paddingBottom: '12px' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{editingProduct ? 'Edit Snack Product' : 'Add New Snack Product'}</h3>
@@ -1475,17 +1552,17 @@ export default function AdminDashboardPage() {
       {showCategoryModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
           <div style={{
-            background: 'var(--bg-surface-elevated, #1E1918)',
-            border: '1px solid var(--border-color, #3D3230)',
-            color: 'var(--text-primary, #F7F1E9)',
-            borderRadius: '16px',
+            backgroundColor: '#1A1514',
+            border: '2px solid #FFD32A',
+            color: '#F7F1E9',
+            borderRadius: '18px',
             width: '100%',
             maxWidth: '460px',
             padding: '28px',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.95)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #3D3230)', paddingBottom: '12px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>{editingCategory ? 'Edit Category' : 'Create Category'}</h3>
@@ -1553,17 +1630,17 @@ export default function AdminDashboardPage() {
       {showOptionModal && selectedCatForOption && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
           <div style={{
-            background: 'var(--bg-surface-elevated, #1E1918)',
-            border: '1px solid var(--border-color, #3D3230)',
-            color: 'var(--text-primary, #F7F1E9)',
-            borderRadius: '16px',
+            backgroundColor: '#1A1514',
+            border: '2px solid #FFD32A',
+            color: '#F7F1E9',
+            borderRadius: '18px',
             width: '100%',
-            maxWidth: '440px',
+            maxWidth: '460px',
             padding: '28px',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.95)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #3D3230)', paddingBottom: '12px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Add Option to {selectedCatForOption.name}</h3>

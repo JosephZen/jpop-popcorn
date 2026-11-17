@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import serverDb from '@/lib/server-db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const userPayload = serverDb.getUserFromRequest(request);
-    if (!userPayload || (userPayload.role || '').toLowerCase() !== 'admin') {
+    if (!serverDb.isAdmin(userPayload)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 

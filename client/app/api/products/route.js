@@ -27,7 +27,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const userPayload = serverDb.getUserFromRequest(request);
-    if (!userPayload || (userPayload.role || '').toLowerCase() !== 'admin') {
+    if (!serverDb.isAdmin(userPayload)) {
       return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
     }
 
