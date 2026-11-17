@@ -164,7 +164,20 @@ const syncLoad = () => {
   try {
     if (fs.existsSync(TMP_FILE)) {
       const persisted = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
-      if (Array.isArray(persisted.products)) globalStore.products = persisted.products;
+      if (Array.isArray(persisted.products)) {
+        globalStore.products = persisted.products.map((p) => {
+          if (p.imageUrl && p.imageUrl.includes('photo-1572177215152')) {
+            return { ...p, imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600&q=80' };
+          }
+          if (p.imageUrl && p.imageUrl.includes('photo-1585237432822')) {
+            return { ...p, imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600&q=80' };
+          }
+          if (p.imageUrl && p.imageUrl.includes('photo-1527515637462')) {
+            return { ...p, imageUrl: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600&q=80' };
+          }
+          return p;
+        });
+      }
       if (Array.isArray(persisted.categories)) globalStore.categories = persisted.categories;
       if (Array.isArray(persisted.customization_options)) globalStore.customization_options = persisted.customization_options;
       if (Array.isArray(persisted.abra_municipalities)) globalStore.abra_municipalities = persisted.abra_municipalities;

@@ -213,17 +213,17 @@ export default function AdminDashboardPage() {
     setShowProductModal(true);
   };
 
-  const handleProductImageUpload = async (e) => {
+  const handleProductImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      const { data } = await uploadAPI.uploadImage(file, 'products');
-      setProductForm((prev) => ({ ...prev, imageUrl: data.url }));
-      toast.success('Product image uploaded!');
-    } catch (err) {
-      toast.error('Failed to upload image.');
-    }
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const dataUrl = uploadEvent.target.result;
+      setProductForm((prev) => ({ ...prev, imageUrl: dataUrl }));
+      toast.success('Product image updated! Click "Save Product" to apply.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddFlavorTag = (e) => {
@@ -473,26 +473,26 @@ export default function AdminDashboardPage() {
   };
 
   // ─── Settings / QR Codes Handlers ───
-  const handleQrImageUpload = async (paymentKey, e) => {
+  const handleQrImageUpload = (paymentKey, e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      const { data } = await uploadAPI.uploadImage(file, 'qrcodes');
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const dataUrl = uploadEvent.target.result;
       setSettingsForm((prev) => ({
         ...prev,
         qr_codes: {
           ...prev.qr_codes,
           [paymentKey]: {
             ...prev.qr_codes[paymentKey],
-            imageUrl: data.url,
+            imageUrl: dataUrl,
           },
         },
       }));
-      toast.success(`${paymentKey.toUpperCase()} QR image uploaded!`);
-    } catch (err) {
-      toast.error('Failed to upload QR code.');
-    }
+      toast.success(`${paymentKey.toUpperCase()} QR image updated! Click "Save Settings" to apply.`);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveAllSettings = async () => {
@@ -1189,12 +1189,23 @@ export default function AdminDashboardPage() {
       {showProductModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
-          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', width: '100%', maxWidth: '520px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h4>{editingProduct ? 'Edit Snack Product' : 'Add New Snack Product'}</h4>
-              <button onClick={() => setShowProductModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FiX size={20} /></button>
+          <div style={{
+            background: 'var(--bg-surface-elevated, #1E1918)',
+            border: '1px solid var(--border-color, #3D3230)',
+            color: 'var(--text-primary, #F7F1E9)',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '560px',
+            padding: '28px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #3D3230)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{editingProduct ? 'Edit Snack Product' : 'Add New Snack Product'}</h3>
+              <button onClick={() => setShowProductModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><FiX size={22} /></button>
             </div>
 
             <form onSubmit={handleSaveProduct}>
@@ -1327,12 +1338,21 @@ export default function AdminDashboardPage() {
       {showCategoryModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
-          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', width: '100%', maxWidth: '420px', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h4>{editingCategory ? 'Edit Category' : 'Create Category'}</h4>
-              <button onClick={() => setShowCategoryModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FiX size={20} /></button>
+          <div style={{
+            background: 'var(--bg-surface-elevated, #1E1918)',
+            border: '1px solid var(--border-color, #3D3230)',
+            color: 'var(--text-primary, #F7F1E9)',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '460px',
+            padding: '28px',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #3D3230)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>{editingCategory ? 'Edit Category' : 'Create Category'}</h3>
+              <button onClick={() => setShowCategoryModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><FiX size={22} /></button>
             </div>
 
             <form onSubmit={handleSaveCategory}>
@@ -1396,12 +1416,21 @@ export default function AdminDashboardPage() {
       {showOptionModal && selectedCatForOption && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
-          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h4>Add Option to {selectedCatForOption.name}</h4>
-              <button onClick={() => setShowOptionModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FiX size={20} /></button>
+          <div style={{
+            background: 'var(--bg-surface-elevated, #1E1918)',
+            border: '1px solid var(--border-color, #3D3230)',
+            color: 'var(--text-primary, #F7F1E9)',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '28px',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #3D3230)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Add Option to {selectedCatForOption.name}</h3>
+              <button onClick={() => setShowOptionModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><FiX size={22} /></button>
             </div>
 
             <form onSubmit={handleSaveOption}>
@@ -1453,13 +1482,25 @@ export default function AdminDashboardPage() {
       {selectedReceiptUrl && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
+          background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px'
         }}>
-          <div style={{ background: '#fff', borderRadius: '12px', padding: '16px', maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-            <h4 style={{ marginBottom: '12px', color: '#333' }}>Payment Receipt</h4>
-            <img src={selectedReceiptUrl} alt="Customer Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '8px' }} />
-            <div style={{ marginTop: '12px' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => setSelectedReceiptUrl(null)}>Close</button>
+          <div style={{
+            background: 'var(--bg-surface-elevated, #1E1918)',
+            border: '1px solid var(--border-color, #3D3230)',
+            color: 'var(--text-primary, #F7F1E9)',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '540px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)'
+          }}>
+            <h4 style={{ marginBottom: '16px', fontSize: '1.2rem', fontWeight: 800 }}>Payment Receipt Screenshot</h4>
+            <div style={{ background: '#000', padding: '8px', borderRadius: '8px', display: 'inline-block', maxWidth: '100%' }}>
+              <img src={selectedReceiptUrl} alt="Customer Receipt" style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: '4px', objectFit: 'contain' }} />
+            </div>
+            <div style={{ marginTop: '16px' }}>
+              <button className="btn btn-primary btn-md" onClick={() => setSelectedReceiptUrl(null)}>Close Preview</button>
             </div>
           </div>
         </div>

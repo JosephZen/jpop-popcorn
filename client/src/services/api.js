@@ -124,13 +124,23 @@ export const settingsAPI = {
 
 // ─── Upload API ───
 export const uploadAPI = {
-  uploadImage: (file, folder = 'jpop') => {
+  uploadImage: async (file, folder = 'jpop') => {
     const formData = new FormData();
     formData.append('image', file);
     formData.append('folder', folder);
-    return api.post('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
     });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Upload failed');
+    }
+
+    const data = await res.json();
+    return { data };
   },
 };
 

@@ -18,7 +18,6 @@ import {
 import { useAuth } from '../../src/features/auth/AuthContext';
 import useCartStore from '../../src/store/cartStore';
 import { ordersAPI, uploadAPI, settingsAPI, locationsAPI } from '../../src/services/api';
-import { PHILIPPINE_PAYMENT_TIERS, initiateThirdPartyCheckout } from '../../src/lib/payment-gateway';
 import toast from 'react-hot-toast';
 import '../../src/pages/CheckoutPage.css';
 
@@ -40,9 +39,8 @@ export default function CheckoutPage() {
   const [selectedBarangayId, setSelectedBarangayId] = useState('');
   const [baseDeliveryFee, setBaseDeliveryFee] = useState(50.00);
 
-  // Payment mode: 'cash' | 'manual_qr' | 'automated_gateway'
+  // Payment mode: 'cash' | 'manual_qr'
   const [checkoutMode, setCheckoutMode] = useState('manual_qr');
-  const [gatewayProvider, setGatewayProvider] = useState('paymongo');
   const [showTierInfo, setShowTierInfo] = useState(false);
 
   const [form, setForm] = useState({
@@ -182,18 +180,18 @@ export default function CheckoutPage() {
     try {
       let receiptUrl = null;
 
-      // 1. If manual QR mode, upload screenshot
-      if (checkoutMode === 'manual_qr' && form.receiptFile) {
-        const { data: uploadRes } = await uploadAPI.uploadImage(form.receiptFile, 'receipts');
-        receiptUrl = uploadRes.url;
-      } else if (checkoutMode === 'automated_gateway') {
-        const gatewayRes = await initiateThirdPartyCheckout({
-          gateway: gatewayProvider,
-          amount: grandTotal,
-          orderId: `ORD-${Date.now()}`,
-          customer: user,
-        });
-        receiptUrl = `GATEWAY:${gatewayProvider.toUpperCase()}:${gatewayRes.referenceId}`;
+      // 1. If manual QR mode, attach screenshot (using instant preview base64 or upload)
+      if (checkoutMode === 'manual_qr') {
+        if (form.receiptPreview) {
+          receiptUrl = form.receiptPreview;
+        } else if (form.receiptFile) {
+          try {
+            const { data: uploadRes } = await uploadAPI.uploadImage(form.receiptFile, 'receipts');
+            receiptUrl = uploadRes.url;
+          } catch {
+            receiptUrl = 'Uploaded Screenshot (Pending Review)';
+          }
+        }
       }
 
       const selectedMun = municipalities.find(m => String(m.id) === String(selectedMunicipalityId));
@@ -219,7 +217,7 @@ export default function CheckoutPage() {
         deliveryAddress: `${form.deliveryAddress} - [${locationDetails}]`,
         deliveryNotes: form.deliveryNotes,
         scheduledTime: form.scheduledTime || null,
-        paymentMethod: checkoutMode === 'cash' ? 'cash' : checkoutMode === 'automated_gateway' ? gatewayProvider : form.paymentMethod,
+        paymentMethod: checkoutMode === 'cash' ? 'cash' : form.paymentMethod,
         paymentReceiptUrl: receiptUrl,
       };
 
@@ -463,129 +461,199 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* 3 Checkout Modes */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                {/* 2 Streamlined Payment Modes */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '24px' }}>
                   <button
                     type="button"
                     className={`method-option ${checkoutMode === 'cash' ? 'method-option--active' : ''}`}
                     onClick={() => setCheckoutMode('cash')}
-                    style={{ padding: '14px 10px', textAlign: 'center' }}
+                    style={{
+                      padding: '18px 14px',
+                      textAlign: 'center',
+                      borderRadius: '16px',
+                      border: checkoutMode === 'cash' ? '2px solid #FFD32A' : '1px solid var(--border-color)',
+                      background: checkoutMode === 'cash' ? 'var(--color-primary-subtle, #2A1818)' : 'var(--bg-surface-elevated, #1E1918)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
                   >
-                    <FiDollarSign size={24} color="var(--color-primary)" style={{ margin: '0 auto 6px' }} />
-                    <strong style={{ fontSize: '0.88rem' }}>Cash</strong>
-                    <p className="text-muted" style={{ fontSize: '0.74rem', margin: 0 }}>COD or Cash on Pickup</p>
+                    <FiDollarSign size={28} color="#FFD32A" style={{ margin: '0 auto 8px', display: 'block' }} />
+                    <strong style={{ fontSize: '0.98rem', display: 'block', color: 'var(--text-primary)' }}>💵 Cash</strong>
+                    <p style={{ fontSize: '0.78rem', margin: '4px 0 0', color: 'var(--text-muted)' }}>COD or Store Pickup</p>
                   </button>
 
                   <button
                     type="button"
                     className={`method-option ${checkoutMode === 'manual_qr' ? 'method-option--active' : ''}`}
                     onClick={() => setCheckoutMode('manual_qr')}
-                    style={{ padding: '14px 10px', textAlign: 'center' }}
+                    style={{
+                      padding: '18px 14px',
+                      textAlign: 'center',
+                      borderRadius: '16px',
+                      border: checkoutMode === 'manual_qr' ? '2px solid #FFD32A' : '1px solid var(--border-color)',
+                      background: checkoutMode === 'manual_qr' ? 'var(--color-primary-subtle, #2A1818)' : 'var(--bg-surface-elevated, #1E1918)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
                   >
-                    <FiUpload size={24} color="var(--color-primary)" style={{ margin: '0 auto 6px' }} />
-                    <strong style={{ fontSize: '0.88rem' }}>Manual QR Upload</strong>
-                    <p className="text-muted" style={{ fontSize: '0.74rem', margin: 0 }}>GCash, Maya, InstaPay</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`method-option ${checkoutMode === 'automated_gateway' ? 'method-option--active' : ''}`}
-                    onClick={() => setCheckoutMode('automated_gateway')}
-                    style={{ padding: '14px 10px', textAlign: 'center' }}
-                  >
-                    <FiCreditCard size={24} color="var(--color-primary)" style={{ margin: '0 auto 6px' }} />
-                    <strong style={{ fontSize: '0.88rem' }}>Automated Gateway</strong>
-                    <p className="text-muted" style={{ fontSize: '0.74rem', margin: 0 }}>PayMongo / HitPay</p>
+                    <FiUpload size={28} color="#FFD32A" style={{ margin: '0 auto 8px', display: 'block' }} />
+                    <strong style={{ fontSize: '0.98rem', display: 'block', color: 'var(--text-primary)' }}>📱 Scan QR Ph</strong>
+                    <p style={{ fontSize: '0.78rem', margin: '4px 0 0', color: 'var(--text-muted)' }}>GCash, Maya, InstaPay</p>
                   </button>
                 </div>
 
                 {/* Mode 1: Cash Details */}
                 {checkoutMode === 'cash' && (
-                  <div style={{ padding: '16px', background: 'var(--bg-subtle)', borderRadius: '8px' }}>
-                    <strong>💵 Cash Selected:</strong>
-                    <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-                      You can pay in cash upon receiving your delivery or when picking up your freshly popped snacks at the counter. Exact change is appreciated!
+                  <div style={{ padding: '20px', background: 'var(--bg-subtle, #2A2220)', border: '1px solid var(--border-color, #3D3230)', borderRadius: '16px' }}>
+                    <h4 style={{ margin: '0 0 8px', fontSize: '1rem', color: '#FFD32A' }}>💵 Cash on Delivery / Store Pickup</h4>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary, #D6CBC0)', lineHeight: 1.5 }}>
+                      You can pay in cash upon receiving your delivery at your doorstep or when picking up your snacks at the store. Exact change is greatly appreciated!
                     </p>
                   </div>
                 )}
 
-                {/* Mode 2: Manual QR Code Upload */}
+                {/* Mode 2: QR Code Scan & Receipt Upload */}
                 {checkoutMode === 'manual_qr' && (
-                  <div>
+                  <div style={{ padding: '20px', background: 'var(--bg-subtle, #2A2220)', border: '1px solid var(--border-color, #3D3230)', borderRadius: '16px' }}>
+                    <label className="form-label" style={{ marginBottom: '12px', display: 'block', fontWeight: 700 }}>
+                      1. Select Your Payment App / Bank to Scan:
+                    </label>
+
                     {/* Method Tabs */}
-                    <div className="payment-methods-tabs" style={{ marginBottom: '14px' }}>
-                      {['gcash', 'maya', 'instapay'].map((method) => (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                      {[
+                        { id: 'gcash', label: 'GCash', color: '#007DFE' },
+                        { id: 'maya', label: 'Maya', color: '#00D632' },
+                        { id: 'instapay', label: 'InstaPay', color: '#9B51E0' },
+                      ].map((tab) => (
                         <button
-                          key={method}
+                          key={tab.id}
                           type="button"
-                          className={`payment-tab ${form.paymentMethod === method ? 'payment-tab--active' : ''}`}
-                          onClick={() => updateForm('paymentMethod', method)}
+                          onClick={() => updateForm('paymentMethod', tab.id)}
+                          style={{
+                            padding: '12px 8px',
+                            borderRadius: '12px',
+                            fontWeight: 800,
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            border: form.paymentMethod === tab.id ? `2px solid ${tab.color}` : '1px solid var(--border-color)',
+                            backgroundColor: form.paymentMethod === tab.id ? tab.color : 'var(--bg-surface-elevated, #1E1918)',
+                            color: form.paymentMethod === tab.id ? '#FFFFFF' : 'var(--text-primary)',
+                            boxShadow: form.paymentMethod === tab.id ? `0 4px 12px ${tab.color}40` : 'none',
+                            transition: 'all 0.2s ease',
+                          }}
                         >
-                          {method.toUpperCase()}
+                          {tab.label}
                         </button>
                       ))}
                     </div>
 
-                    {/* QR Display */}
+                    {/* QR Display Card */}
                     {activeQr && (
-                      <div className="qr-container">
-                        <img src={activeQr.imageUrl} alt={`${activeQr.label} QR`} className="qr-image" />
-                        <div className="qr-details">
-                          <p><strong>Account Name:</strong> {activeQr.accountName}</p>
-                          <p><strong>Account Number:</strong> {activeQr.accountNumber}</p>
-                          <p><strong>Amount to Transfer:</strong> <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>₱{grandTotal.toFixed(2)}</span></p>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        padding: '24px 16px',
+                        background: 'var(--bg-surface-elevated, #1E1918)',
+                        border: '1px solid var(--border-color, #3D3230)',
+                        borderRadius: '16px',
+                        marginBottom: '20px',
+                      }}>
+                        <div style={{
+                          background: '#FFFFFF',
+                          padding: '12px',
+                          borderRadius: '16px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                          display: 'inline-block',
+                          marginBottom: '16px',
+                        }}>
+                          <img
+                            src={activeQr.imageUrl}
+                            alt={`${activeQr.label} QR`}
+                            style={{ width: '210px', height: '210px', display: 'block', borderRadius: '8px' }}
+                          />
+                        </div>
+
+                        <div style={{ fontSize: '0.92rem', lineHeight: 1.6 }}>
+                          <p style={{ margin: '0 0 4px', color: 'var(--text-secondary)' }}>
+                            <strong>Account Name:</strong> <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{activeQr.accountName}</span>
+                          </p>
+                          <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)' }}>
+                            <strong>Account Number:</strong>{' '}
+                            <span style={{ color: '#FFD32A', fontWeight: 800, letterSpacing: '0.5px' }}>{activeQr.accountNumber}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(activeQr.accountNumber);
+                                toast.success('Account number copied to clipboard!');
+                              }}
+                              style={{
+                                marginLeft: '8px',
+                                padding: '2px 8px',
+                                fontSize: '0.74rem',
+                                borderRadius: '6px',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--bg-subtle)',
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              📋 Copy
+                            </button>
+                          </p>
+                          <div style={{ marginTop: '8px', padding: '8px 16px', background: 'rgba(255, 211, 42, 0.1)', border: '1px solid rgba(255, 211, 42, 0.3)', borderRadius: '8px' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.86rem' }}>Amount to Transfer: </span>
+                            <strong style={{ color: '#FFD32A', fontSize: '1.2rem', fontWeight: 900 }}>₱{grandTotal.toFixed(2)}</strong>
+                          </div>
                         </div>
                       </div>
                     )}
 
+                    {/* Screenshot Upload Requirement */}
                     <div className="form-group mt-md">
-                      <label className="form-label">Upload Payment Receipt Screenshot (Required for QR mode)</label>
-                      <label className="receipt-upload-box">
+                      <label className="form-label" style={{ fontWeight: 700, color: '#FFD32A' }}>
+                        2. Upload Payment Receipt Screenshot <span style={{ color: 'var(--color-danger)' }}>*</span>
+                      </label>
+                      <label
+                        style={{
+                          border: '2px dashed var(--border-color, #443634)',
+                          borderRadius: '14px',
+                          padding: '24px 16px',
+                          textAlign: 'center',
+                          backgroundColor: 'var(--bg-surface-elevated, #1E1918)',
+                          cursor: 'pointer',
+                          display: 'block',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleReceiptUpload}
                           style={{ display: 'none' }}
                         />
-                        <FiUpload size={32} color="var(--color-primary)" style={{ margin: '0 auto 8px', display: 'block' }} />
-                        <strong>Click to select payment screenshot</strong>
-                        <p className="text-muted" style={{ fontSize: '0.82rem' }}>PNG, JPG, WEBP up to 10MB</p>
+                        <FiUpload size={32} color="#FFD32A" style={{ margin: '0 auto 8px', display: 'block' }} />
+                        <strong style={{ display: 'block', fontSize: '0.94rem', color: 'var(--text-primary)' }}>
+                          {form.receiptFile ? '✅ Receipt Selected: ' + form.receiptFile.name : 'Click to select payment screenshot'}
+                        </strong>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                          PNG, JPG, or screenshot from your mobile banking app
+                        </p>
                       </label>
 
                       {form.receiptPreview && (
                         <div style={{ textAlign: 'center', marginTop: '14px' }}>
-                          <span className="text-muted" style={{ fontSize: '0.85rem' }}>Receipt Preview:</span>
-                          <img src={form.receiptPreview} alt="Receipt Preview" className="receipt-preview-img" style={{ maxHeight: '180px', borderRadius: '8px', display: 'block', margin: '6px auto' }} />
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Receipt Preview:</span>
+                          <img
+                            src={form.receiptPreview}
+                            alt="Receipt Preview"
+                            style={{ maxHeight: '200px', borderRadius: '10px', display: 'block', margin: '8px auto', border: '2px solid #FFD32A' }}
+                          />
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* Mode 3: Automated Payment Gateway */}
-                {checkoutMode === 'automated_gateway' && (
-                  <div style={{ padding: '16px', background: 'var(--bg-subtle)', borderRadius: '8px' }}>
-                    <label className="form-label">Select Payment Gateway Provider:</label>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-                      <button
-                        type="button"
-                        className={`btn ${gatewayProvider === 'paymongo' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                        onClick={() => setGatewayProvider('paymongo')}
-                      >
-                        PayMongo (QR Ph, Maya, GCash, Cards)
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn ${gatewayProvider === 'hitpay' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                        onClick={() => setGatewayProvider('hitpay')}
-                      >
-                        HitPay PH (Fast Settlement)
-                      </button>
-                    </div>
-
-                    <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: 0 }}>
-                      You will be securely redirected to complete your payment of <strong>₱{grandTotal.toFixed(2)}</strong> via {gatewayProvider.toUpperCase()} upon order confirmation.
-                    </p>
                   </div>
                 )}
               </div>
@@ -609,7 +677,7 @@ export default function CheckoutPage() {
                     <div><strong>Scheduled:</strong> {new Date(form.scheduledTime).toLocaleString()}</div>
                   )}
                   <div>
-                    <strong>Payment Mode:</strong> {checkoutMode === 'cash' ? 'Cash on Delivery/Pickup' : checkoutMode === 'automated_gateway' ? `Automated Gateway (${gatewayProvider.toUpperCase()})` : `Manual QR (${form.paymentMethod.toUpperCase()})`}
+                    <strong>Payment Mode:</strong> {checkoutMode === 'cash' ? '💵 Cash on Delivery / Store Pickup' : `📱 QR Ph (${form.paymentMethod.toUpperCase()})`}
                   </div>
                 </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiPlus, FiCheck, FiSliders, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiPlus, FiMinus, FiCheck, FiSliders, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import useCartStore from '../../store/cartStore';
 import { useAuth } from '../auth/AuthContext';
@@ -45,6 +45,7 @@ const ProductCard = ({ product }) => {
 
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [added, setAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
@@ -133,10 +134,13 @@ const ProductCard = ({ product }) => {
       price: displayPrice,
     };
 
-    addItem(cartProduct, itemFlavorLabel, selectedSize, 1, customizationPayload);
+    addItem(cartProduct, itemFlavorLabel, selectedSize, quantity, customizationPayload);
     setAdded(true);
-    toast.success(`Added ${product.name} (${selectedSize}) to cart! 🍿`);
-    setTimeout(() => setAdded(false), 1200);
+    toast.success(`Added ${quantity > 1 ? `${quantity}x ` : ''}${product.name} (${selectedSize}) to cart! 🍿`);
+    setTimeout(() => {
+      setAdded(false);
+      setQuantity(1);
+    }, 1200);
   };
 
   return (
@@ -368,14 +372,46 @@ const ProductCard = ({ product }) => {
           )}
 
           <div className="product-card__footer">
-            <div className="product-card__price">₱{displayPrice.toFixed(2)}</div>
-            <button
-              className={`btn ${added ? 'btn-primary' : 'btn-accent'} product-card__btn`}
-              onClick={handleAddToCart}
-              disabled={isMixMode && totalMixPercentage !== 100}
-            >
-              {added ? <><FiCheck /> Added</> : <><FiPlus /> Add to Bag</>}
-            </button>
+            <div className="product-card__price-row">
+              <span className="product-card__price">₱{(displayPrice * quantity).toFixed(2)}</span>
+              {quantity > 1 && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  (₱{displayPrice.toFixed(2)} each)
+                </span>
+              )}
+            </div>
+
+            <div className="product-card__actions-row">
+              {/* Immediate Quantity Selector */}
+              <div className="product-card__qty-stepper">
+                <button
+                  type="button"
+                  className="qty-stepper-btn"
+                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  aria-label="Decrease quantity"
+                  disabled={quantity <= 1}
+                >
+                  <FiMinus size={14} />
+                </button>
+                <span className="qty-stepper-value">{quantity}</span>
+                <button
+                  type="button"
+                  className="qty-stepper-btn"
+                  onClick={() => setQuantity((prev) => prev + 1)}
+                  aria-label="Increase quantity"
+                >
+                  <FiPlus size={14} />
+                </button>
+              </div>
+
+              <button
+                className={`btn ${added ? 'btn-primary' : 'btn-accent'} product-card__btn`}
+                onClick={handleAddToCart}
+                disabled={isMixMode && totalMixPercentage !== 100}
+              >
+                {added ? <><FiCheck /> Added</> : <><FiPlus /> Add {quantity > 1 ? `(${quantity})` : 'to Bag'}</>}
+              </button>
+            </div>
           </div>
         </div>
       </div>
