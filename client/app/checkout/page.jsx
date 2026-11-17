@@ -343,7 +343,7 @@ export default function CheckoutPage() {
       clearCart();
 
       toast.success('🎉 Order placed successfully! We will prepare your snacks fresh! 🍿');
-      router.push('/profile');
+      router.push('/track-order');
     } catch (err) {
       console.error('Order submission error:', err);
       toast.error(err.response?.data?.error || 'Failed to place order. Please try again.');

@@ -98,8 +98,8 @@ const Navbar = ({ onCartClick }) => {
           </Link>
           {activeOrderCount > 0 && (
             <Link
-              href="/profile"
-              className={`navbar__link ${pathname === '/profile' ? 'navbar__link--active' : ''}`}
+              href="/track-order"
+              className={`navbar__link ${pathname === '/track-order' ? 'navbar__link--active' : ''}`}
               style={{ color: '#FFD32A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               📦 Track Order
@@ -120,15 +120,21 @@ const Navbar = ({ onCartClick }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '8px' }}>
               {isUserLoggedIn ? (
                 <>
+                  {activeOrderCount > 0 && (
+                    <Link
+                      href="/track-order"
+                      className={`navbar__link ${pathname === '/track-order' ? 'navbar__link--active' : ''}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FFD32A', fontWeight: 700 }}
+                    >
+                      📦 Track Order ({activeOrderCount} active)
+                    </Link>
+                  )}
                   <Link
                     href="/profile"
                     className={`navbar__link ${pathname === '/profile' ? 'navbar__link--active' : ''}`}
                     style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
-                    <FiUser size={16} /> Profile ({user?.name?.split(' ')[0] || 'My Account'})
-                    {activeOrderCount > 0 && (
-                      <span className="navbar__order-bubble-inline">{activeOrderCount} active</span>
-                    )}
+                    <FiUser size={16} /> Account Profile ({user?.name?.split(' ')[0] || 'My Account'})
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -180,18 +186,13 @@ const Navbar = ({ onCartClick }) => {
               <Link
                 href="/profile"
                 className="navbar__user-btn"
-                title="View Profile & Orders"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}
+                title="Account Profile & Settings"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <FiUser size={16} />
                 <span className="navbar__user-name">
                   {isAdmin ? 'Admin' : (user?.name?.split(' ')[0] || 'Profile')}
                 </span>
-                {activeOrderCount > 0 && (
-                  <span className="navbar__order-badge" title={`${activeOrderCount} order in progress`}>
-                    {activeOrderCount}
-                  </span>
-                )}
               </Link>
               <button
                 className="navbar__icon-btn navbar__desktop-logout"
