@@ -60,10 +60,13 @@ export async function GET(request) {
     }
 
     const normalizedUserEmail = (user.email || '').toLowerCase().trim();
-    const userOrders = serverDb.find('orders', o => (
-      o.userId === user.id ||
-      (o.customerEmail && o.customerEmail.toLowerCase().trim() === normalizedUserEmail)
-    )).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const userOrders = serverDb.find('orders', o => {
+      const orderEmail = (o.customerEmail || '').toLowerCase().trim();
+      if (normalizedUserEmail && orderEmail) {
+        return orderEmail === normalizedUserEmail;
+      }
+      return o.userId && user.id && String(o.userId) === String(user.id);
+    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const allProducts = serverDb.find('products');
     const ordersWithItems = userOrders.map(order => {
@@ -87,9 +90,15 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = serverDb.getUserFromRequest(request);
-    const userId = user ? user.id : 1; // Fallback or guest user
-
     const body = await request.json();
+
+    let resolvedUserId = user ? user.id : null;
+    const customerEmail = (body.customerEmail || user?.email || '').toLowerCase().trim();
+    if (!resolvedUserId && customerEmail) {
+      const existingUser = serverDb.findOne('users', u => (u.email || '').toLowerCase().trim() === customerEmail);
+      if (existingUser) resolvedUserId = existingUser.id;
+    }
+
     const {
       items,
       deliveryMethod,
@@ -146,9 +155,9 @@ export async function POST(request) {
     const grandTotal = (calculatedSubtotal + shippingFee).toFixed(2);
 
     const order = serverDb.insert('orders', {
-      userId,
+      userId: resolvedUserId,
       customerName: body.customerName || user?.name || 'Customer',
-      customerEmail: (body.customerEmail || user?.email || '').toLowerCase().trim(),
+      customerEmail: customerEmail,
       customerPhone: body.customerPhone || user?.phone || '',
       status: 'pending',
       subtotal: calculatedSubtotal.toFixed(2),

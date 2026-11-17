@@ -21,8 +21,18 @@ const Navbar = ({ onCartClick }) => {
 
   const checkActiveOrders = () => {
     try {
+      if (!user) {
+        setActiveOrderCount(0);
+        return;
+      }
+      const userEmail = (user.email || '').toLowerCase().trim();
       const stored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
-      const active = stored.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase()));
+      const userOrders = stored.filter(o => {
+        const oEmail = (o.customerEmail || '').toLowerCase().trim();
+        if (userEmail && oEmail) return oEmail === userEmail;
+        return user.id && String(o.userId) === String(user.id);
+      });
+      const active = userOrders.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase()));
       setActiveOrderCount(active.length);
     } catch {
       setActiveOrderCount(0);
@@ -40,7 +50,7 @@ const Navbar = ({ onCartClick }) => {
       window.removeEventListener('jpop_order_updated', handleOrderEvent);
       clearInterval(interval);
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 15);

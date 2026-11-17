@@ -14,13 +14,13 @@ export async function GET(request) {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const ordersWithItems = allOrders.map(order => {
-      const customer = serverDb.findOne('users', u => u.id === order.userId);
+      const customer = serverDb.findOne('users', u => u.id === order.userId || (order.customerEmail && u.email.toLowerCase() === order.customerEmail.toLowerCase()));
       const items = serverDb.find('order_items', i => i.orderId === order.id);
       return {
         ...order,
-        customerName: customer?.name || `Customer #${order.userId}`,
-        customerEmail: customer?.email || '',
-        customerPhone: customer?.phone || '',
+        customerName: order.customerName || customer?.name || (order.userId ? `Customer #${order.userId}` : 'Customer'),
+        customerEmail: order.customerEmail || customer?.email || '',
+        customerPhone: order.customerPhone || customer?.phone || '',
         items,
       };
     });

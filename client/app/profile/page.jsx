@@ -103,15 +103,29 @@ export default function ProfilePage() {
   const loadUserOrders = useCallback(async (isSilent = false) => {
     if (!isSilent) setRefreshing(true);
     try {
+      if (!user) return;
+      const currentUserEmail = (user.email || '').toLowerCase().trim();
+
       let serverOrders = [];
       try {
         const { data } = await ordersAPI.getMyOrders();
-        serverOrders = data.orders || [];
+        // Ensure server orders strictly belong to current user
+        serverOrders = (data.orders || []).filter(so => {
+          const soEmail = (so.customerEmail || '').toLowerCase().trim();
+          if (currentUserEmail && soEmail) return soEmail === currentUserEmail;
+          return user.id && String(so.userId) === String(user.id);
+        });
       } catch {}
 
       let localOrders = [];
       try {
-        localOrders = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+        const allStored = JSON.parse(localStorage.getItem('jpop_persisted_orders') || '[]');
+        // STRICTLY isolate local orders by the signed-in user's email or user ID
+        localOrders = allStored.filter(lo => {
+          const loEmail = (lo.customerEmail || '').toLowerCase().trim();
+          if (currentUserEmail && loEmail) return loEmail === currentUserEmail;
+          return user.id && String(lo.userId) === String(user.id);
+        });
       } catch {}
 
       const combined = [...serverOrders];
@@ -135,7 +149,7 @@ export default function ProfilePage() {
       setLoadingOrders(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {

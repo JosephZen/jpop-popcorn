@@ -274,7 +274,7 @@ export default function CheckoutPage() {
       // 2. Submit order payload to backend
       const payload = {
         customerName: user?.name || form.name || 'Customer',
-        customerEmail: user?.email || '',
+        customerEmail: (user?.email || form.email || '').toLowerCase().trim(),
         customerPhone: form.phone || user?.phone || '',
         items: items.map((i) => ({
           productId: i.productId,
@@ -299,10 +299,10 @@ export default function CheckoutPage() {
       const orderRecord = {
         ...(serverOrder || {}),
         id: serverOrder?.id || (Date.now() + Math.floor(Math.random() * 1000)),
-        userId: user?.id || 1,
-        customerName: user?.name || form.name || 'Customer',
-        customerEmail: user?.email || '',
-        customerPhone: form.phone || user?.phone || '',
+        userId: serverOrder?.userId || user?.id || null,
+        customerName: serverOrder?.customerName || user?.name || form.name || 'Customer',
+        customerEmail: (serverOrder?.customerEmail || user?.email || '').toLowerCase().trim(),
+        customerPhone: serverOrder?.customerPhone || form.phone || user?.phone || '',
         status: serverOrder?.status || 'pending',
         subtotal: serverOrder?.subtotal || getSubtotal().toFixed(2),
         shippingFee: serverOrder?.shippingFee || '0.00',
