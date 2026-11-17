@@ -133,7 +133,16 @@ if (!globalStore) {
       if (Array.isArray(persisted.cart_items)) globalStore.cart_items = persisted.cart_items;
       if (Array.isArray(persisted.chat_sessions)) globalStore.chat_sessions = persisted.chat_sessions;
       if (Array.isArray(persisted.chat_messages)) globalStore.chat_messages = persisted.chat_messages;
-      if (persisted.settings) globalStore.settings = { ...globalStore.settings, ...persisted.settings };
+      if (persisted.settings) {
+        if (persisted.settings.qr_codes) {
+          for (const key of ['gcash', 'maya', 'instapay']) {
+            if (persisted.settings.qr_codes[key]?.imageUrl?.includes('qrserver.com')) {
+              persisted.settings.qr_codes[key].imageUrl = seedData.settings?.qr_codes?.[key]?.imageUrl || `/qr/${key}.jpg`;
+            }
+          }
+        }
+        globalStore.settings = { ...globalStore.settings, ...persisted.settings };
+      }
     }
   } catch {}
 
@@ -194,7 +203,16 @@ const syncLoad = () => {
       if (Array.isArray(persisted.orders)) globalStore.orders = persisted.orders;
       if (Array.isArray(persisted.order_items)) globalStore.order_items = persisted.order_items;
       if (Array.isArray(persisted.cart_items)) globalStore.cart_items = persisted.cart_items;
-      if (persisted.settings) globalStore.settings = { ...globalStore.settings, ...persisted.settings };
+      if (persisted.settings) {
+        if (persisted.settings.qr_codes) {
+          for (const key of ['gcash', 'maya', 'instapay']) {
+            if (persisted.settings.qr_codes[key]?.imageUrl?.includes('qrserver.com')) {
+              persisted.settings.qr_codes[key].imageUrl = seedData.settings?.qr_codes?.[key]?.imageUrl || `/qr/${key}.jpg`;
+            }
+          }
+        }
+        globalStore.settings = { ...globalStore.settings, ...persisted.settings };
+      }
     }
   } catch {}
 };

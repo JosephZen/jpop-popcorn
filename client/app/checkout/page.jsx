@@ -30,7 +30,11 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [qrCodes, setQrCodes] = useState({});
+  const [qrCodes, setQrCodes] = useState({
+    gcash: { label: 'GCash', accountName: 'Joseph Zen Castro', accountNumber: '0912-345-6789', imageUrl: '/qr/gcash.jpg' },
+    maya: { label: 'Maya', accountName: 'Joseph Zen Castro', accountNumber: '0912-345-6789', imageUrl: '/qr/maya.jpg' },
+    instapay: { label: 'InstaPay', accountName: 'Joseph Zen Castro (Maribank)', accountNumber: '10555184277', imageUrl: '/qr/instapay.png' },
+  });
 
   // Locations state
   const [municipalities, setMunicipalities] = useState([]);
@@ -70,7 +74,11 @@ export default function CheckoutPage() {
 
     settingsAPI.get()
       .then(({ data }) => {
-        setQrCodes(data.settings?.qr_codes || {});
+        const remoteQrs = data.settings?.qr_codes || {};
+        setQrCodes((prev) => ({
+          ...prev,
+          ...remoteQrs,
+        }));
       })
       .catch(() => {});
 
@@ -563,16 +571,18 @@ export default function CheckoutPage() {
                       }}>
                         <div style={{
                           background: '#FFFFFF',
-                          padding: '12px',
+                          padding: '14px',
                           borderRadius: '16px',
                           boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
                           display: 'inline-block',
                           marginBottom: '16px',
+                          maxWidth: '320px',
+                          width: '100%',
                         }}>
                           <img
                             src={formatImageUrl(activeQr.imageUrl)}
                             alt={`${activeQr.label} QR`}
-                            style={{ width: '210px', height: '210px', display: 'block', borderRadius: '8px', objectFit: 'contain' }}
+                            style={{ width: '100%', height: 'auto', maxHeight: '420px', display: 'block', borderRadius: '10px', objectFit: 'contain', margin: '0 auto' }}
                           />
                         </div>
 

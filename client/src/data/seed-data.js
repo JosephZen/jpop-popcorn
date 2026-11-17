@@ -229,19 +229,19 @@ export const seedData = {
         "label": "GCash",
         "accountName": "Joseph Zen Castro",
         "accountNumber": "0912-345-6789",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH:09123456789;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "imageUrl": "/qr/gcash.jpg"
       },
       "maya": {
         "label": "Maya",
         "accountName": "Joseph Zen Castro",
         "accountNumber": "0912-345-6789",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MAYA:09123456789;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "imageUrl": "/qr/maya.jpg"
       },
       "instapay": {
         "label": "InstaPay",
         "accountName": "Joseph Zen Castro (Maribank)",
         "accountNumber": "10555184277",
-        "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=INSTAPAY:10555184277;NAME:Joseph+Zen+Castro;NOTE:JPOP-CORNER"
+        "imageUrl": "/qr/instapay.png"
       }
     },
     "faq": [

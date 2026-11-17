@@ -167,9 +167,9 @@ export default function AdminDashboardPage() {
         setSettingsForm({
           site_customization: s.site_customization || { heroTitle: '', heroSubtitle: '', bannerAnnouncement: '' },
           qr_codes: s.qr_codes || {
-            gcash: { label: 'GCash', accountName: '', accountNumber: '', imageUrl: '' },
-            maya: { label: 'Maya', accountName: '', accountNumber: '', imageUrl: '' },
-            instapay: { label: 'InstaPay', accountName: '', accountNumber: '', imageUrl: '' },
+            gcash: { label: 'GCash', accountName: 'Joseph Zen Castro', accountNumber: '0912-345-6789', imageUrl: '/qr/gcash.jpg' },
+            maya: { label: 'Maya', accountName: 'Joseph Zen Castro', accountNumber: '0912-345-6789', imageUrl: '/qr/maya.jpg' },
+            instapay: { label: 'InstaPay', accountName: 'Joseph Zen Castro (Maribank)', accountNumber: '10555184277', imageUrl: '/qr/instapay.png' },
           },
           facebook_messenger: s.facebook_messenger || {
             enabled: true,
@@ -1223,7 +1223,20 @@ export default function AdminDashboardPage() {
                           <img
                             src={formatImageUrl(qr.imageUrl)}
                             alt={`${methodKey} QR`}
-                            style={{ width: '130px', height: '130px', objectFit: 'contain', background: '#fff', padding: '6px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                            style={{
+                              maxWidth: '180px',
+                              maxHeight: '260px',
+                              width: 'auto',
+                              height: 'auto',
+                              objectFit: 'contain',
+                              background: '#fff',
+                              padding: '8px',
+                              borderRadius: '10px',
+                              border: '1px solid var(--border-color)',
+                              display: 'block',
+                              margin: '0 auto',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            }}
                           />
                         </div>
                       )}
